@@ -8,8 +8,8 @@ from chapter_5.exercises import (
     DynamicArray,
     find_repeated_number,
     GeneralCaesarCipher,
-    sum_matrix, sum_matrix_with_comprehension, shuffle_list)
-from tests.utils import create_dynamic_array_with_specific_number_of_elements
+    sum_matrix, sum_matrix_with_comprehension, shuffle_list, remove_all, find_repeated_numbers)
+from tests.utils import create_dynamic_array_with_specific_number_of_elements, create_dynamic_array_with_added_elements
 
 
 class TestFragmentCode:
@@ -126,6 +126,37 @@ class TestDynamicArray:
             start_index=start_index
         )
         assert actual_result == expected_result
+
+    # C-5.16 Implement a pop method for the DynamicArray class, given in Code Frag-
+    # ment 5.3, that removes the last element of the array, and that shrinks the
+    # capacity, N, of the array by half any time the number of elements in the
+    # array equelas N/2.
+    @pytest.mark.parametrize(
+        'elements_to_add, expected_popped_element, expected_array', [
+            (range(0,8), 7, [0, 1, 2, 3, 4, 5, 6, None]),
+            ([0, 1, 2, 3, 4, 5, 6, None], 6, [0, 1, 2, 3, 4, 5, None, None]),
+            ([0, 1, 2, 3, 4, None, None, None], 4, [0, 1, 2, 3]),
+            ([0, 1, 2, 3, 4, 5, None, None], 5, [0, 1, 2, 3, 4, None, None, None]),
+            ([0, 1, 2, 3], 3, [0, 1, 2, None]),
+            ([0, 1, 2, None], 2, [0, 1]),
+            ([0, 1], 1, [0]),
+            ([0], 0, [None]),
+        ]
+    )
+    def test_pop(self, elements_to_add, expected_popped_element, expected_array):
+        array = create_dynamic_array_with_added_elements(elements_to_add)
+        popped_element = array.pop()
+        assert popped_element == expected_popped_element
+        assert array._A == expected_array
+
+    @pytest.mark.parametrize(
+        'dynamic_array', [
+            DynamicArray()
+        ]
+    )
+    def test_pop_negative_scenario(self, dynamic_array):
+        with pytest.raises(ValueError):
+            dynamic_array.pop()
 
 
 # R-5.7
@@ -299,6 +330,7 @@ class TestPerformanceWithNotEmptyListInConstructor:
         print('********** PERFORMANCE TEST FOR CAPACITY', capacity, ' ******')
 
 
+# C-5.14
 class TestShuffleList:
     @pytest.mark.parametrize(
         'input_list, expected_result', [
@@ -311,7 +343,7 @@ class TestShuffleList:
             input_list,
             expected_result
     ):
-        actual_result = shuffle_list(l=input_list)
+        actual_result = shuffle_list(elements=input_list)
         assert actual_result == expected_result
 
     @pytest.mark.parametrize(
@@ -327,7 +359,44 @@ class TestShuffleList:
     ):
         actual_result = None
         for i in range(10):
-            actual_result = shuffle_list(l=input_list)
+            actual_result = shuffle_list(elements=input_list)
             if actual_result != expected_result:
                 break
         assert not actual_result == expected_result
+
+
+class TestRemoveAllFunction:
+    @pytest.mark.parametrize(
+        'elements, element_to_remove, expected_result', [
+            ([], None, []),
+            ([1], 0, [1]),
+            ([1], 1, []),
+            ([0, 1], 2, [0, 1]),
+            ([0, 1], 1, [0]),
+            ([1, 0, 1], 1, [0]),
+            ([0, 1, 0, 2, 3, 0], 0, [1, 2, 3]),
+        ]
+    )
+    def test_remove_all(self, elements, element_to_remove, expected_result):
+        actual_result = remove_all(elements=elements, element_to_remove=element_to_remove)
+        assert sorted(actual_result) == sorted(expected_result)
+
+
+class TestFindRepeatedNumbersFunction:
+    @pytest.mark.parametrize(
+        'numbers, repetition_number, expected_result', [
+            ([1], 1, 1),
+            ([1], 2, None),
+            ([1, 1], 2, 1),
+            ([1, 3, 2, 4], 2, None),
+            ([1, 3, 3, 4], 2, 3),
+            ([1, 3, 1, 1, 1, 1], 5, 1),
+            ([1, 3, 1, 1, 1, 1], 5, 1),
+            ([1, 3, 1, 1, 2, 1], 5, None),
+            ([1, 3, 2, 2, 2, 2, 1, 1, 1, 1], 5, 1),
+            ([1, 3, 2, 2, 2, 2, 1, 1, 1, 3], 5, None),
+        ]
+    )
+    def test_find_repeated_numbers(self, numbers, repetition_number, expected_result):
+        actual_result = find_repeated_numbers(numbers=numbers, repetition_number=repetition_number)
+        assert actual_result == expected_result

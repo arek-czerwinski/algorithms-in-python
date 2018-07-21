@@ -10,3 +10,11 @@ def create_dynamic_array_with_specific_number_of_elements(
         array.append(i)
 
     return array
+
+
+def create_dynamic_array_with_added_elements(elements_to_add: list) -> DynamicArray:
+    array = DynamicArray()
+    for element in elements_to_add:
+        array.append(element)
+
+    return array
