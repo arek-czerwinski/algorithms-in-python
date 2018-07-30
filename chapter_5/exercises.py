@@ -1,8 +1,11 @@
-from collections import defaultdict
+from collections import defaultdict, UserList
 from random import randrange
 
 
 # R-5.1
+from typing import Tuple
+
+
 def fragment_code1(n: int):
     import sys
     data = []
@@ -320,3 +323,66 @@ def find_repeated_numbers(numbers: list, repetition_number):
             return number
 
     return None
+
+
+# C-5.29 A useful operation in databases is the natural join. If we view a database
+# as a list of ordered pairs of objects, then the natural join of databases A
+# and B is the list of all ordered triples (x, y, z) such that the pair (x, y) is in
+# A and the pair (y, z) is in B. Describe and analyze an efficient algorithm
+# for computing the natural join of a list A of n pairs and a list B of m pairs.
+def execute_natural_join(elements_1: Tuple[Tuple, ...], elements_2: Tuple[Tuple, ...]):
+    # alternative is n ^ 2 double iteration for each list
+    key_to_values = {
+        element[0]: element[1:]
+        for element in elements_2
+        if element
+    }
+    result = tuple(
+        element + key_to_values[element[0]]
+        for element in elements_1
+        if element and element[0] in key_to_values
+    )
+    return result
+
+
+# C-5.30 When Bob wants to send Alice a message M on the Internet, he breaks M
+# into n data packets, numbers the packets consecutively, and injects them
+# into the network. When the packets arrive at Alice’s computer, they may
+# be out of order, so Alice must assemble the sequence of n packets in order
+# before she can be sure she has the entire message. Describe an efficient
+# scheme for Alice to do this, assuming that she knows the value of n. What
+# is the running time of this algorithm?
+class MessageBuilder:
+    def __init__(self, how_many_packets):
+        self._how_many_packets = how_many_packets
+        self._buffer = [None for _ in range(self._how_many_packets)]
+
+    def add_new_packet(self, sequence_id: int, packet_content: str):
+        index = sequence_id - 1
+        if index < 0 or index >= len(self._buffer):
+            raise ValueError(f'wrong sequence_id: {sequence_id}')
+        self._buffer[index] = packet_content
+
+    def build_message(self):
+        validated_packages = [
+            packet_content
+            for packet_content in self._buffer
+            if packet_content
+        ]
+        if len(validated_packages) != len(self._buffer):
+            raise ValueError('Some packets are lost')
+        return ' '.join(validated_packages)
+
+
+# C-5.31 Describe a way to use recursion to add all the numbers in an n × n data
+# set, represented as a list of lists.
+def add_all_elements(elements, total=0.0):
+    if isinstance(elements, (list, tuple)):
+        return sum((
+            add_all_elements(elements=element, total=total)
+            for element in elements
+        ))
+    else:
+        element = elements
+        return element + total
+

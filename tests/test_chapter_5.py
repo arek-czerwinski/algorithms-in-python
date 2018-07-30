@@ -8,7 +8,8 @@ from chapter_5.exercises import (
     DynamicArray,
     find_repeated_number,
     GeneralCaesarCipher,
-    sum_matrix, sum_matrix_with_comprehension, shuffle_list, remove_all, find_repeated_numbers)
+    sum_matrix, sum_matrix_with_comprehension, shuffle_list, remove_all, find_repeated_numbers, execute_natural_join,
+    MessageBuilder, add_all_elements)
 from tests.utils import create_dynamic_array_with_specific_number_of_elements, create_dynamic_array_with_added_elements
 
 
@@ -399,4 +400,167 @@ class TestFindRepeatedNumbersFunction:
     )
     def test_find_repeated_numbers(self, numbers, repetition_number, expected_result):
         actual_result = find_repeated_numbers(numbers=numbers, repetition_number=repetition_number)
+        assert actual_result == expected_result
+
+
+class TestExecuteNaturalJoin:
+    @pytest.mark.parametrize(
+        'elements_1, elements_2, expected_result', [
+            (
+                (
+                    tuple(),
+                ),
+                (
+                    ('b', 'A', 'B', 'C'),
+                ),
+                (
+                    tuple(),
+                )
+            ),
+            (
+                (
+                    ('a', 1, 2, 3),
+                ),
+                (
+                    ('a', '1', '2', '3'),
+                ),
+                (
+                    ('a', 1, 2, 3, '1', '2', '3'),
+                )
+            ),
+            (
+                (
+                    ('a', 1, 2, 3),
+                ),
+                (
+                    ('b', 'A', 'B', 'C'),
+                ),
+                (
+                    tuple(),
+                )
+            ),
+            (
+                (
+                    ('a', 1, 2, 3),
+                    ('b', 4, 5, 6),
+                    ('c', 7, 8, 9)
+                ),
+                (
+                    ('b', 'A', 'B', 'C'),
+                    ('c', 'D', 'E', 'F'),
+                ),
+                (
+                    ('b', 4, 5, 6, 'A', 'B', 'C'),
+                    ('c', 7, 8, 9, 'D', 'E', 'F'),
+                )
+            )
+        ]
+    )
+    def test_execute_natural_join(self, elements_1, elements_2, expected_result):
+        execute_natural_join(elements_1=elements_1, elements_2=elements_2)
+
+
+class TestMessageBuilder:
+    @pytest.mark.parametrize(
+        'how_many_packets, expected_result', [
+            (1, {'_how_many_packets': 1, '_buffer': [None]}),
+            (0, {'_how_many_packets': 0, '_buffer': []}),
+            (2, {'_how_many_packets': 2, '_buffer': [None, None]}),
+            (3, {'_how_many_packets': 3, '_buffer': [None, None, None]})
+        ]
+    )
+    def test___init__(self, how_many_packets, expected_result):
+        packet_builder = MessageBuilder(how_many_packets=how_many_packets)
+        assert vars(packet_builder) == expected_result
+
+    @pytest.mark.parametrize(
+        'how_many_packets, packets_to_add, expected_result', [
+            (
+                1,
+                (
+                    (1, 'content_1'),
+                ),
+                {'_how_many_packets': 1, '_buffer': ['content_1']}
+            ),
+            (
+                2,
+                (
+                    (1, 'content_1'),
+                    (2, 'content_2'),
+                ),
+                {'_how_many_packets': 2, '_buffer': ['content_1', 'content_2']}
+            ),
+            (
+                3,
+                (
+                    (1, 'content_1'),
+                    (2, 'content_2'),
+                ),
+                {'_how_many_packets': 3, '_buffer': ['content_1', 'content_2', None]}
+            )
+        ]
+    )
+    def test_add_new_packet(self, how_many_packets, packets_to_add, expected_result):
+        packet_builder = MessageBuilder(how_many_packets=how_many_packets)
+        for packet in packets_to_add:
+            packet_builder.add_new_packet(sequence_id=packet[0], packet_content=packet[1])
+        assert vars(packet_builder) == expected_result
+
+    @pytest.mark.parametrize(
+        'how_many_packets, packet_to_add', [
+            (1, (0, 'something')),
+            (1, (2, 'something')),
+            (0, (0, 'something')),
+            (2, (3, 'something')),
+        ]
+    )
+    def test_add_new_packet_negative_scenario(self, how_many_packets, packet_to_add):
+        packet_builder = MessageBuilder(how_many_packets=how_many_packets)
+        with pytest.raises(ValueError):
+            packet_builder.add_new_packet(sequence_id=packet_to_add[0], packet_content=packet_to_add[1])
+
+    @pytest.mark.parametrize(
+        'buffer, expected_result', [
+            ([], ''),
+            (['A'], 'A'),
+            (['A', 'B'], 'A B'),
+            (['A', 'B', 'C'], 'A B C'),
+        ]
+    )
+    def test_build_message(self, buffer, expected_result):
+        packet_builder = MessageBuilder(how_many_packets=100)
+        packet_builder._buffer = buffer
+        actual_result = packet_builder.build_message()
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'buffer', [
+            ([None]),
+            (['something', None]),
+        ]
+    )
+    def test_build_message_negative_scenarios(self, buffer):
+        packet_builder = MessageBuilder(how_many_packets=100)
+        packet_builder._buffer = buffer
+        with pytest.raises(ValueError):
+            packet_builder.build_message()
+
+
+class TestAddAllElementsFunction:
+    @pytest.mark.parametrize(
+        'input, expected_result', [
+            ([], 0.0),
+            ([1], 1.0),
+            ([1, 2, 3], 6.0),
+            ((1, 2, 3), 6.0),
+            ([[1], [1]], 2.0),
+            ([[1, 2], [1, 2]], 6.0),
+            ([[1, 2, 3], [1, 2, 3]], 12.0),
+            ([[1, 2, 3], [1, 2, 3], [1, 2, 3]], 18.0),
+            ([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]], 24.0),
+            (((1, 2, 3), (1, 2, 3), (1, 2, 3), (1, 2, 3)), 24.0),
+        ]
+    )
+    def test_add_all_elements(self, input, expected_result):
+        actual_result = add_all_elements(elements=input)
         assert actual_result == expected_result
