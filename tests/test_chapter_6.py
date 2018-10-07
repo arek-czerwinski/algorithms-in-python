@@ -1,7 +1,11 @@
 import pytest
 
-from chapter_6.exercises import remove_all_elements_from_stack, transfer_from_stack_to_stack, reverse, \
-    ArithmeticExpressionCalculator
+from chapter_6.exercises import (
+    remove_all_elements_from_stack,
+    transfer_from_stack_to_stack,
+    reverse,
+    ArithmeticGroupingSymbolValidator,
+)
 
 
 class TestTransferFromStackToStackFunction:
@@ -48,66 +52,113 @@ class TestReverseFunction:
         actual_result = reverse(elements=elements)
         assert actual_result == expected_result
 
+# region TestArithmeticGroupingSymbolValidator
+# region test___init__
+EXPECTED_PASSING_EMPTY_SYMBOLS = {
+    '_left_grouping_symbols': [],
+    '_right_grouping_symbols': [],
+    '_equivalent': dict()
+}
+TEST_PASSING_EMPTY_SYMBOLS = (
+    [],
+    [],
+    EXPECTED_PASSING_EMPTY_SYMBOLS
+)
 
-class TestArithmeticExpressionCalculator:
+TEST_PASSING_PARAMETERS_WITH_ONE_PARENTHESIS = (
+    ['('],
+    [')'],
+    {
+        '_left_grouping_symbols': ['('],
+        '_right_grouping_symbols': [')'],
+        '_equivalent': {')': '('}
+    }
+)
+
+TEST_PASSING_PARAMETERS_WITH_TWO_PARENTHESIS = (
+    ['(', '['],
+    [')', ']'],
+    {
+        '_left_grouping_symbols': ['(', '['],
+        '_right_grouping_symbols': [')', ']'],
+        '_equivalent': {')': '(', ']': '['}
+    }
+)
+# region test___init__negative
+TEST_PASSING_DIFFERENT_SIZE_OF_SYMBOLS = (
+    ['('],
+    ['(', '[']
+)
+
+TEST_PASSING_THE_SAME_SYMBOLS_TWICE = (
+    ['(', '('],
+    ['(', '[']
+)
+# endregion test___init__negative
+# endregion TestArithmeticGroupingSymbolValidator
+
+
+class TestArithmeticGroupingSymbolValidator:
     @pytest.mark.parametrize(
-        'expression, expected_result', [
-            ('1 + 1', {'_expression': '1 + 1', '_parsed_expression': ['1', '+', '1']})
+        'left_grouping_symbols, right_grouping_symbols, expected_result', [
+            TEST_PASSING_EMPTY_SYMBOLS,
+            TEST_PASSING_PARAMETERS_WITH_ONE_PARENTHESIS,
+            TEST_PASSING_PARAMETERS_WITH_TWO_PARENTHESIS
         ]
     )
-    def test___init__(self, expression, expected_result):
-        assert vars(ArithmeticExpressionCalculator(expression=expression)) == expected_result
+    def test___init__(self, left_grouping_symbols, right_grouping_symbols, expected_result):
+        assert vars(
+            ArithmeticGroupingSymbolValidator(
+                left_grouping_symbols=left_grouping_symbols,
+                right_grouping_symbols=right_grouping_symbols
+            )
+        ) == expected_result
 
     @pytest.mark.parametrize(
-        'expression, expected_result', [
-            ('', []),
-            (' ', []),
-            ('1', ['1']),
-            ('1 ', ['1']),
-            ('1 +', ['1', '+']),
-            (' 1 + ', ['1', '+']),
-            ('1   + 1', ['1', '+', '1']),
+        'left_grouping_symbols, right_grouping_symbols', [
+            TEST_PASSING_DIFFERENT_SIZE_OF_SYMBOLS,
+            TEST_PASSING_THE_SAME_SYMBOLS_TWICE
         ]
     )
-    def test__split_expression(self, expression, expected_result):
-        actual_result = ArithmeticExpressionCalculator._split_expression(
-            expression=expression
+    def test___init__negative(self, left_grouping_symbols, right_grouping_symbols):
+        with pytest.raises(AssertionError):
+            ArithmeticGroupingSymbolValidator(
+                left_grouping_symbols=left_grouping_symbols,
+                right_grouping_symbols=right_grouping_symbols
+            )
+
+    @pytest.mark.parametrize(
+        'left_grouping_symbols, right_grouping_symbols,arithmetic_expression, expected_result', [
+            (['(', '['], [')', ']'],  '', False),
+            (['(', '['], [')', ']'], '1', True),
+            (['(', '['], [')', ']'], '(', False),
+            (['(', '['], [')', ']'], ')', False),
+            (['(', '['], [')', ']'], '()', True),
+            (['(', '['], [')', ']'], '()[]', True),
+            (['(', '['], [')', ']'], '[()]', True),
+            (['(', '['], [')', ']'], '[[]]', True),
+            (['(', '['], [')', ']'], '((()))', True),
+            (['(', '['], [')', ']'], '(1)', True),
+            (['(', '['], [')', ']'], '(-1)', True),
+            (['(', '['], [')', ']'], '-(1)', True),
+            (['(', '['], [')', ']'], '(1 + 1)', True),
+            (['(', '['], [')', ']'], '(1+1)', True),
+            (['(', '['], [')', ']'], '((1 + 1)+1)', True),
+            (['(', '['], [')', ']'], '(1+1)+(2+2)', True),
+            (['(', '['], [')', ']'], '[(1+ 1) / 2]', True),
+
+        ]
+    )
+    def test_valid_arithmetic_grouping(
+            self,
+            left_grouping_symbols,
+            right_grouping_symbols,
+            arithmetic_expression,
+            expected_result
+    ):
+        validator = ArithmeticGroupingSymbolValidator(
+            left_grouping_symbols=left_grouping_symbols,
+            right_grouping_symbols=right_grouping_symbols
         )
+        actual_result = validator.valid_arithmetic_grouping(arithmetic_expression=arithmetic_expression)
         assert actual_result == expected_result
-
-    def test_something(self):
-        class Expression:
-            def __init__(self, splited_expression: list) -> None:
-                self._splited_expression = splited_expression
-                self._operators = {
-                    '+': lambda x, y: x + y,
-                    '-': lambda x, y: x - y
-                }
-
-            def calculate(self):
-                if len(self._splited_expression) == 1:
-                    return int(self._splited_expression[0])
-
-                if self._splited_expression[0] == '(':
-                    index_right_parenthais = self._splited_expression.index(object=')')
-                    if self._splited_expression[index_right_parenthais] != ')':
-                        raise ValueError(
-                            f'wrong parenthesis {self._splited_expression[0]} '
-                            f'and {self._splited_expression[-1]}'
-                        )
-                    new_expression = Expression(splited_expression=self._splited_expression[1:-1])
-                    return new_expression.calculate()
-                else:
-                    operator = self._operators[self._splited_expression[1]]
-                    result = operator(
-                        Expression(splited_expression=self._splited_expression[:1]).calculate(),
-                        Expression(splited_expression=self._splited_expression[2:]).calculate(),
-                    )
-                    return result
-
-
-
-
-        # result = Expression(splited_expression=['1', '+', '1', '-', '1', '-', '1']).calculate()
-        result = Expression(splited_expression=['(', '1', '+', '1', ')', '-', '(' '1', '-', '1', ')']).calculate()
-        print('==============> ', result)

@@ -39,8 +39,7 @@
 # ends up at the top of T.
 def transfer_from_stack_to_stack(stack_a: list, stack_b: list):
     while stack_a:
-        popped_element = stack_a.pop()
-        stack_b.append(popped_element)
+        stack_b.append(stack_a.pop())
 
 
 # R-6.4 Give a recursive method for removing all the elements from a stack.
@@ -64,24 +63,42 @@ def reverse(elements: list):
 # R-6.6 Give a precise and complete definition of the concept of matching for
 # grouping symbols in an arithmetic expression. Your definition may be
 # recursive.
-class ArithmeticExpressionCalculator:
-    def __init__(self, expression: str) -> None:
-        self._expression = expression
-        self._parsed_expression = self._split_expression(expression=expression)
+class ArithmeticGroupingSymbolValidator:
+    def __init__(self, left_grouping_symbols, right_grouping_symbols) -> None:
+        assert len(left_grouping_symbols) == len(right_grouping_symbols), 'Different size of symbols'
+        assert len(set(left_grouping_symbols)) == len(set(right_grouping_symbols)), 'Passed twice the same symbol'
 
-    @staticmethod
-    def _split_expression(expression: str):
-        expression = expression.strip()
-        if expression:
-            return [
-                splited
-                for splited in expression.split(sep=' ')
-                if splited
-            ]
-        return list()
+        self._left_grouping_symbols = left_grouping_symbols
+        self._right_grouping_symbols = right_grouping_symbols
+        self._equivalent = {
+            self._right_grouping_symbols[index]: self._left_grouping_symbols[index]
+            for index in range(len(self._right_grouping_symbols))
+        }
 
-    def evaluate_expression(self, splited_expression):
-        pass
+    def valid_arithmetic_grouping(self, arithmetic_expression):
+        if not arithmetic_expression:
+            return False
 
-    def calculate(self):
-        pass
+        def valid_grouping_symbols(symbol_stack: list, splitted_expression: list):
+            if not splitted_expression:
+                return symbol_stack
+            first_expression, *rest = splitted_expression
+
+            if first_expression in self._left_grouping_symbols:
+                symbol_stack.append(first_expression)
+            if first_expression in self._right_grouping_symbols:
+                if not symbol_stack:
+                    raise ValueError(f'{first_expression} not found on last element in stack')
+                *rest_stack, last_element = symbol_stack
+                symbol_equivalent = self._equivalent[first_expression]
+                if last_element == symbol_equivalent:
+                    return valid_grouping_symbols(symbol_stack=rest_stack, splitted_expression=rest)
+
+            return valid_grouping_symbols(symbol_stack=symbol_stack, splitted_expression=rest)
+
+        try:
+            stack = valid_grouping_symbols(symbol_stack=list(), splitted_expression=arithmetic_expression)
+            return False if stack else True
+        except ValueError:
+            return False
+
