@@ -37,6 +37,9 @@
 # ments from stack S onto stack T, so that the element that starts at the top
 # of S is the first to be inserted onto T, and the element at the bottom of S
 # ends up at the top of T.
+import collections
+
+
 def transfer_from_stack_to_stack(stack_a: list, stack_b: list):
     while stack_a:
         stack_b.append(stack_a.pop())
@@ -102,3 +105,84 @@ class ArithmeticGroupingSymbolValidator:
         except ValueError:
             return False
 
+
+# R-6.7 What values are returned during the following sequence of queue operations,
+# if executed on an initially empty queue?
+# enqueue(5), [5]
+# enqueue(3), [5, 3]
+# dequeue(),  [3] => 5
+# enqueue(2), [3, 2]
+# enqueue(8), [3, 2, 8]
+# dequeue(),  [2, 8] => 3
+# dequeue(),  [8] => 2
+# enqueue(9), [8, 9]
+# enqueue(1), [8, 9, 1]
+# dequeue(),  [9, 1] => 8
+# enqueue(7), [9, 1, 7]
+# enqueue(6), [9, 1, 7, 6]
+# dequeue(),  [1, 7, 6] => 9
+# dequeue(),  [7, 6] => 1
+# enqueue(4), [7, 6, 4]
+# dequeue(),  [6, 4] => 7
+# dequeue().  [4] => 4
+
+
+# R- 6.8 Suppose an initially empty queue Q has executed a total of 32 enqueue operations,
+# 10 first operations, and 15 dequeue operations, 5 of which raised Empty errors that were caught and ignored.
+# What is the current size of Q?
+# Answer -> Assumption is that, dequeue operation caused those exception.
+#  As a result current size is 22
+#
+
+# R- 6.9 Had the queue of the previous problem been an instance of ArrayQueue
+# that used an initial array of capacity 30, and had its size never been greater than 30,
+# what would be the final value of the   front instance variable?
+# Answer -> position number 0
+
+
+# R-6.10 Consider what happens if the loop in the ArrayQueue. resize method at lines 53–55 of
+# Code Fragment 6.7 had been implemented as:
+# for k in range(self. size):
+# self. data[k] = old[k] # rather than old[walk]
+# Give a clear explanation of what could go wrong.
+# The order should be kept because it is FIFO queue
+
+
+# R-6.11
+# Give a simple adapter that implements our queue ADT while using a collections.deque
+# instance for storage.
+class MyQueue:
+    def __init__(self, elements=tuple()) -> None:
+        self._queue = collections.deque(elements)
+
+    def enqueue(self, element):
+        self._queue.append(element)
+
+    def dequeue(self):
+        return self._queue.pop()
+
+    def first(self):
+        first_element = self._queue.popleft()
+        self._queue.appendleft(first_element)
+        return first_element
+
+    def is_empty(self):
+        return len(self._queue) == 0
+
+
+# R-6.12 WhatvaluesarereturnedduringthefollowingsequenceofdequeADTop-
+#  erations, on initially empty deque?
+# empty []
+# add first(4), [4]
+# add last(8),  [4, 8]
+# add last(9),  [4, 8, 9]
+# add first(5), [5, 4, 8, 9]
+# last(),       [5, 4, 8, 9] => 9
+# delete first(), [5, 4, 8, 9] => 5
+# delete last(),  [5, 4, 8,] => 9
+# add last(7),  [5, 4, 8, 7]
+# first(),  [5, 4, 8, 7] => 5
+# last(),   [5, 4, 8, 7] => 7
+# add last(6), [5, 4, 8, 7, 6]
+# delete first(),  [4, 8, 7, 6] => 5
+# delete first(). [8, 7, 6] => 4
