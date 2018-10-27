@@ -5,8 +5,11 @@ from chapter_6.exercises import (
     transfer_from_stack_to_stack,
     reverse,
     ArithmeticGroupingSymbolValidator,
-    MyQueue
-)
+    MyQueue,
+    ArrayStackWithMaxLen,
+    FullException,
+    ArrayStackWithInitialization,
+    EmptyException, reverse_values_in_stack)
 
 
 class TestTransferFromStackToStackFunction:
@@ -227,3 +230,234 @@ class TestMyQueue:
         my_queue = MyQueue(elements=start_elements)
         assert my_queue.is_empty() == expected_result
 
+
+class TestArrayStack:
+    # C - 6.16 Modify the ArrayStack implementation so that the stack’s capacity is limited
+    # to maxlen elements, where maxlen is an optional parameter to the constructor
+    # (that defaults to None). If push is called when the stack is at full capacity,
+    # throw a Full exception (defined similarly to Empty).
+    @pytest.mark.parametrize(
+        'maxlen, expected_result', [
+            (1, {'_data': [], '_maxlen': 1}),
+            (None, {'_data': [], '_maxlen': None})
+        ]
+    )
+    def test___init__(self, maxlen, expected_result):
+        actual_result = ArrayStackWithMaxLen(maxlen=maxlen)
+        assert vars(actual_result) == expected_result
+
+    @pytest.mark.parametrize(
+        'array_stack, element, expected_result', [
+            (ArrayStackWithMaxLen(maxlen=None), 1, {'_data': [1], '_maxlen': None}),
+            (ArrayStackWithMaxLen(maxlen=1), 1, {'_data': [1], '_maxlen': 1}),
+        ]
+    )
+    def test_push(self, array_stack: ArrayStackWithMaxLen, element, expected_result):
+        array_stack.push(e=element)
+        assert vars(array_stack) == expected_result
+
+    # C - 6.16 Modify the ArrayStack implementation so that the stack’s capacity is limited
+    # to maxlen elements, where maxlen is an optional parameter to the constructor
+    # (that defaults to None). If push is called when the stack is at full capacity,
+    # throw a Full exception (defined similarly to Empty).
+    @pytest.mark.parametrize(
+        'array_stack, element', [
+            (ArrayStackWithMaxLen(maxlen=0), 1),
+        ]
+    )
+    def test_push_exceeded_maxlen(self, array_stack: ArrayStackWithMaxLen, element):
+        with pytest.raises(FullException):
+            array_stack.push(e=element)
+
+
+# C-6.17 n the previous exercise, we assume that the underlying list is initially empty.
+# Redo that exercise,
+# this time preallocating an underlying list with length equal to the stack’s maximum capacity.
+class TestArrayStackWithInitialization:
+    @pytest.mark.parametrize(
+        'maxlen, expected_result', [
+            (1, {'_data': [None], '_top_of_stack_index': 0}),
+            (2, {'_data': [None, None], '_top_of_stack_index': 0}),
+
+        ]
+    )
+    def test___init__(self, maxlen, expected_result):
+        actual_result = ArrayStackWithInitialization(maxlen=maxlen)
+        assert vars(actual_result) == expected_result
+
+    @pytest.mark.parametrize(
+        'array_stack, elements_to_add, expected_result', [
+            (
+                ArrayStackWithInitialization(maxlen=3),
+                [1],
+                {
+                    '_data': [1, None, None],
+                    '_top_of_stack_index': 1
+                }
+            ),
+            (
+                ArrayStackWithInitialization(maxlen=3),
+                [1, 2],
+                {
+                    '_data': [1, 2, None],
+                    '_top_of_stack_index': 2
+                }
+            ),
+            (
+                ArrayStackWithInitialization(maxlen=3),
+                [1, 2, 3],
+                {
+                    '_data': [1, 2, 3],
+                    '_top_of_stack_index': 3
+                }
+            ),
+        ]
+    )
+    def test_push(self, array_stack: ArrayStackWithInitialization, elements_to_add, expected_result):
+        add_elements_to_stack(array_stack, elements_to_add)
+        actual_result = vars(array_stack)
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'array_stack, elements_to_add', [
+            (
+                ArrayStackWithInitialization(maxlen=3),
+                [1, 2, 3, 4]
+            ),
+        ]
+    )
+    def test_push__stack_if_full(
+            self,
+            array_stack: ArrayStackWithInitialization,
+            elements_to_add,
+    ):
+        with pytest.raises(FullException):
+            add_elements_to_stack(array_stack, elements_to_add)
+
+    @pytest.mark.parametrize(
+        'array_stack, elements_to_add, expected_result', [
+            (
+                ArrayStackWithInitialization(maxlen=5),
+                [],
+                True
+            ),
+            (
+                ArrayStackWithInitialization(maxlen=5),
+                [1],
+                False
+            )
+        ]
+    )
+    def test_is_empty(
+            self,
+            array_stack: ArrayStackWithInitialization,
+            elements_to_add, expected_result
+    ):
+        add_elements_to_stack(array_stack, elements_to_add)
+
+        actual_result = array_stack.is_empty()
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'array_stack, elements_to_add, expected_result', [
+            (
+                    ArrayStackWithInitialization(maxlen=5),
+                    [1],
+                    1
+            ),
+            (
+                    ArrayStackWithInitialization(maxlen=5),
+                    [1, 2],
+                    2
+            )
+        ]
+    )
+    def test_top(self, array_stack, elements_to_add, expected_result):
+        add_elements_to_stack(array_stack, elements_to_add)
+        actual_result = array_stack.top()
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'array_stack, elements_to_add', [
+            (
+                    ArrayStackWithInitialization(maxlen=5),
+                    [],
+            )
+        ]
+    )
+    def test_top_empty_stack(self, array_stack, elements_to_add):
+        with pytest.raises(EmptyException):
+            add_elements_to_stack(array_stack, elements_to_add)
+
+            array_stack.top()
+
+    @pytest.mark.parametrize(
+        'array_stack, elements_to_add, expected_stack_state, expected_popped_value', [
+            (
+                ArrayStackWithInitialization(maxlen=3),
+                [1, 2, 3],
+                {
+                    '_data': [1, 2, None],
+                    '_top_of_stack_index': 2,
+                },
+                3
+            ),
+            (
+                ArrayStackWithInitialization(maxlen=3),
+                [1, 2],
+                {
+                    '_data': [1, None, None],
+                    '_top_of_stack_index': 1
+                },
+                2
+            ),
+            (
+                ArrayStackWithInitialization(maxlen=3),
+                [1],
+                {
+                    '_data': [None, None, None],
+                    '_top_of_stack_index': 0
+                },
+                1
+            ),
+        ]
+    )
+    def test_pop(self, array_stack, elements_to_add, expected_stack_state, expected_popped_value):
+        add_elements_to_stack(array_stack, elements_to_add)
+        actual_popped_value = array_stack.pop()
+        actual_stack_state = vars(array_stack)
+        assert actual_stack_state == expected_stack_state
+        assert actual_popped_value == expected_popped_value
+
+    @pytest.mark.parametrize(
+        'array_stack, elements_to_add', [
+            (
+                    ArrayStackWithInitialization(maxlen=5),
+                    [],
+            )
+        ]
+    )
+    def test_pop_empty_stack(self, array_stack, elements_to_add):
+        with pytest.raises(EmptyException):
+            add_elements_to_stack(array_stack, elements_to_add)
+
+            array_stack.pop()
+
+
+def add_elements_to_stack(array_stack, elements_to_add):
+    for element_to_add in elements_to_add:
+        array_stack.push(e=element_to_add)
+
+
+class TestReverseValuesInStackFunction:
+    @pytest.mark.parametrize(
+        'stack, expected_value', [
+            ([], []),
+            ([1], [1]),
+            ([1, 2], [2, 1]),
+            ([1, 2, 3], [3, 2, 1]),
+        ]
+    )
+    def test(self, stack, expected_value):
+        actual_result = reverse_values_in_stack(stack=stack)
+        assert actual_result == expected_value

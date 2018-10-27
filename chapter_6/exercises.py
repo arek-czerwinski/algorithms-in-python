@@ -1,4 +1,5 @@
 
+import collections
 
 # R-6.1 What values are returned during the following series of stack operations, if
 # executed upon an initially empty stack? push(5), push(3), pop(), push(2),
@@ -37,7 +38,6 @@
 # ments from stack S onto stack T, so that the element that starts at the top
 # of S is the first to be inserted onto T, and the element at the bottom of S
 # ends up at the top of T.
-import collections
 
 
 def transfer_from_stack_to_stack(stack_a: list, stack_b: list):
@@ -186,3 +186,140 @@ class MyQueue:
 # add last(6), [5, 4, 8, 7, 6]
 # delete first(),  [4, 8, 7, 6] => 5
 # delete first(). [8, 7, 6] => 4
+
+
+# C-6.15 Suppose Alice has picked three distinct integers and placed them into a stack S in random order.
+#  Write a short, straight-line piece of pseudo-code (with no loops or recursion)
+# that uses only one comparison and only one variable x, yet that results in variable x storing
+# the largest of Alice’s three integers with probability 2/3. Argue why your method is correct.
+stack_of_three_numbers = [2, 3, 4]
+x = stack_of_three_numbers.pop()
+x = x if x > stack_of_three_numbers[0] else stack_of_three_numbers.pop()
+
+# Probability 2/3 occurs because there are three numbers which are all possibilities.
+# For this task we can take only two numbers and each pick is independent from each other and this
+# is the reason why the probability is 2/3.
+
+
+class EmptyException(Exception):
+    pass
+
+
+class FullException(Exception):
+    pass
+
+
+class ArrayStackWithMaxLen:
+    """LIFO Stack implementation using a Python list as underlying storage."""
+
+    # C - 6.16 Modify the ArrayStack implementation so that the stack’s capacity is limited
+    # to maxlen elements, where maxlen is an optional parameter to the constructor
+    # (that defaults to None). If push is called when the stack is at full capacity,
+    # throw a Full exception (defined similarly to Empty).
+    def __init__(self, maxlen=None):
+        """Create an empty stack."""
+        self._data = []                       # nonpublic list instance
+        self._maxlen = maxlen
+
+    def __len__(self):
+        """Return the number of elements in the stack."""
+        return len(self._data)
+
+    def is_empty(self):
+        """Return True if the stack is empty."""
+        return len(self._data) == 0
+
+    # C - 6.16
+    def push(self, e):
+        """Add element e to the top of the stack."""
+        self._is_stack_full()
+        self._data.append(e)                  # new item stored at end of list
+
+    def _is_stack_full(self):
+        if self._maxlen is not None and len(self._data) + 1 > self._maxlen:
+            raise FullException(f'The stack is full. It has {len(self._data)} elements.')
+
+    def top(self):
+        """Return (but do not remove) the element at the top of the stack.
+
+        Raise Empty exception if the stack is empty.
+        """
+        if self.is_empty():
+            raise EmptyException('Stack is empty')
+        return self._data[-1]                 # the last item in the list
+
+    def pop(self):
+        """Remove and return the element from the top of the stack (i.e., LIFO).
+
+        Raise Empty exception if the stack is empty.
+        """
+        if self.is_empty():
+            raise EmptyException('Stack is empty')
+        return self._data.pop()
+
+
+# C-6.17 n the previous exercise, we assume that the underlying list is initially empty.
+# Redo that exercise,
+# this time preallocating an underlying list with length equal to the stack’s maximum capacity.
+class ArrayStackWithInitialization:
+    """LIFO Stack implementation using a Python list as underlying storage."""
+    def __init__(self, maxlen: int=1):
+        """Create an empty stack."""
+        self._data = [None] * maxlen
+        self._top_of_stack_index = 0
+
+    def __len__(self):
+        """Return the number of elements in the stack."""
+        return len(self._data)
+
+    def is_empty(self):
+        """Return True if the stack is empty."""
+        return self._top_of_stack_index == 0
+
+    def push(self, e):
+        """Add element e to the top of the stack."""
+        self._raise_error_if_stack_is_full()
+        self._data[self._top_of_stack_index] = e
+        self._top_of_stack_index += 1
+
+    def _raise_error_if_stack_is_full(self):
+        if len(self._data) == self._top_of_stack_index:
+            raise FullException(
+                f'The stack is full. It has {len(self._data)} elements. '
+                f'Current index is {self._top_of_stack_index}.'
+            )
+
+    def top(self):
+        """Return (but do not remove) the element at the top of the stack.
+
+        Raise Empty exception if the stack is empty.
+        """
+        if self.is_empty():
+            raise EmptyException('Stack is empty')
+        return self._data[self._top_of_stack_index - 1]                 # the last item in the list
+
+    def pop(self):
+        """Remove and return the element from the top of the stack (i.e., LIFO).
+
+        Raise Empty exception if the stack is empty.
+        """
+        if self.is_empty():
+            raise EmptyException('Stack is empty')
+        popped_value = self._data[self._top_of_stack_index - 1]
+        self._data[self._top_of_stack_index - 1] = None
+        self._top_of_stack_index -= 1
+        return popped_value
+
+
+# C-6.18 Show how to use the transfer function, described in Exercise R-6.3,
+# and two temporary stacks, to replace the contents of a given stack S with those same elements,
+# but in reversed order.
+def reverse_values_in_stack(stack: list):
+    stack_a = list()
+    stack_b = list()
+    transfer_from_stack_to_stack(stack_a=stack, stack_b=stack_a)
+    transfer_from_stack_to_stack(stack_a=stack_a, stack_b=stack_b)
+    stack.clear()
+    transfer_from_stack_to_stack(stack_a=stack_b, stack_b=stack)
+
+    return stack
