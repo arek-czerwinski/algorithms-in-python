@@ -430,7 +430,7 @@ def swap_even_numbers_before_odd_numbers(numbers: list):
     return _swap_even_numbers_before_odd_numbers(numbers=list(numbers), even_index=0, odd_index=0)
 
 
-def find_pair_number_to_get_sum(sorted_numbers: list, sum_result:int):
+def find_pair_number_to_get_sum(sorted_numbers: list, sum_result: int):
     def _find_pair_number_to_get_sum(
             sorted_numbers: list,
             sum_result: int,

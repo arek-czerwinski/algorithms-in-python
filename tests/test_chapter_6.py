@@ -9,7 +9,7 @@ from chapter_6.exercises import (
     ArrayStackWithMaxLen,
     FullException,
     ArrayStackWithInitialization,
-    EmptyException, reverse_values_in_stack)
+    EmptyException, reverse_values_in_stack, is_matched_html, _get_tag_name)
 
 
 class TestTransferFromStackToStackFunction:
@@ -461,3 +461,49 @@ class TestReverseValuesInStackFunction:
     def test(self, stack, expected_value):
         actual_result = reverse_values_in_stack(stack=stack)
         assert actual_result == expected_value
+
+
+class TestIsMatchedHtmlFunction:
+    @pytest.mark.parametrize(
+        'raw_html, expected_value', [
+            ('<>', False),
+            ('<a>', False),
+            ('<a>a</a>', True),
+            ('<a></a>', True),
+            ('<body><a></a></body>', True),
+            ('<body>eee<a>df</a></body>', True),
+            ('body', True),
+            ('<a border="3"></a>', True),
+            ('<a border="3" with="45"></a>', True),
+            ('<a border="3" with="45"    ></a>', True),
+            ('<a border="3"    with="45"></a>', True),
+            ('<a    border="3" with="45"></a>', True),
+            ('<a border="3" with="45"></a>      ', True),
+            ('<a border="3" with="45"><text text="bold"></text></a>      ', True),
+
+
+        ]
+    )
+    def test_is_matched_html(self, raw_html: str, expected_value):
+        actual_result = is_matched_html(raw=raw_html)
+        assert actual_result == expected_value
+
+    @pytest.mark.parametrize(
+        'raw_tag, expected_result', [
+            ('body', 'body'),
+            (' body', 'body'),
+            ('body border="3"', 'body'),
+            ('body border="3" ', 'body'),
+            ('body border="3" with="45"    ', 'body'),
+            ('body border="3"    with="45"', 'body'),
+            ('body    border="3" with="45"', 'body'),
+            (' a href="https://onet.pl', 'a')
+
+        ]
+    )
+    def test__get_tag_name(self, raw_tag: str, expected_result):
+        tag = _get_tag_name(raw_tag=raw_tag)
+        assert tag == expected_result
+
+
+

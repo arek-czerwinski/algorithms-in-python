@@ -323,3 +323,42 @@ def reverse_values_in_stack(stack: list):
     transfer_from_stack_to_stack(stack_a=stack_b, stack_b=stack)
 
     return stack
+
+
+# C-6.19 In Code Fragment 6.5 we assume that opening tags in HTML have form <name>, as with <li>.
+# More generally, HTML allows optional attributes to be expressed as part of an opening tag.
+# The general form used is <name attribute1="value1" attribute2="value2">; for example,
+# a table can be given a border and additional padding by using an opening tag of
+# <table border="3" cellpadding="5">. Modify Code Frag- ment 6.5 so that it can properly match tags,
+#  even when an opening tag may include one or more such attributes.
+def is_matched_html(raw):
+    """Return True if all HTML tags are properly match; False otherwise."""
+    stack = ArrayStackWithMaxLen()
+    j = raw.find('<')               # find first '<' character (if any)
+    while j != -1:
+        k = raw.find('>', j+1)        # find next '>' character
+        if k == -1:
+            return False                # invalid tag
+        # tag = raw[j+1:k]              # strip away < >
+        tag = _get_tag_name(raw_tag=raw[j+1: k])
+        if not tag:
+            return False
+        if not tag.startswith('/'):   # this is opening tag
+            stack.push(tag)
+        else:                         # this is closing tag
+            if stack.is_empty():
+                return False              # nothing to match with
+            if tag[1:] != stack.pop():
+                return False              # mismatched delimiter
+        j = raw.find('<', k+1)        # find next '<' character (if any)
+    return stack.is_empty()             # were all opening tags matched?
+
+
+def _get_tag_name(raw_tag: str):
+    raw_tags = [
+        part_of_raw_tag
+        for part_of_raw_tag in raw_tag.split(sep=' ')
+        if part_of_raw_tag and '="' not in part_of_raw_tag
+    ]
+
+    return raw_tags[0] if raw_tags else None
