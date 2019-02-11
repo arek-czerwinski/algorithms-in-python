@@ -13,7 +13,8 @@ from chapter_6.exercises import (
     FullException,
     ArrayStackWithInitialization,
     EmptyException, reverse_values_in_stack, is_matched_html, _get_tag_name,
-    permute_with_stack, get_all_subsets, ArithmeticExpressionToPostfixExpression)
+    permute_with_stack, get_all_subsets, ArithmeticExpressionToPostfixExpression,
+    move_elements_stack_t_to_stack_s_with_original_sequence)
 
 
 class TestTransferFromStackToStackFunction:
@@ -594,3 +595,28 @@ class TestArithmeticExpressionToPostfixExpression:
             )
         )
         assert actual_result == expected_result
+
+
+class TestMoveElementsStackTToStackSWithOriginalSequence:
+    @pytest.mark.parametrize(
+        'r, s, t, expected_r, expected_s, expected_t', [
+            ([1, 2, 3], [4, 5], [6, 7, 8, 9], [1, 2, 3], [6, 7, 8, 9, 4, 5], [])
+        ]
+    )
+    def test_move_elements_stack_t_to_stack_s_with_original_sequence(
+            self,
+            r,
+            s,
+            t,
+            expected_r,
+            expected_s,
+            expected_t,
+    ):
+        new_r, new_s, new_t = move_elements_stack_t_to_stack_s_with_original_sequence(
+            r=r,
+            s=s,
+            t=t,
+        )
+        assert new_r == expected_r
+        assert new_s == expected_s
+        assert new_t == expected_t

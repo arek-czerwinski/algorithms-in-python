@@ -702,3 +702,51 @@ class ArithmeticExpressionToPostfixExpression:
         return operators
 
 
+# C-6.23
+# Suppose you have three none empty stacks R,S,and T.
+# Describe a sequence of operations that results in S storing all elements originally in T below
+# all of S’s original elements, with both sets of those elements in their original order.
+# The final configuration for R should be the same as its original configuration.
+# For example, if R = [1,2,3], S = [4,5], and T = [6,7,8,9], the final configuration should have
+# R = [1,2,3] and S = [6,7,8,9,4,5].
+def move_elements_stack_t_to_stack_s_with_original_sequence(
+        r: List[Any],
+        s: List[Any],
+        t: List[Any],
+):
+    copy_r = list(r)
+    copy_s = list(s)
+    copy_t = list(t)
+    size_t = len(t)
+
+    while copy_t:
+        copy_r.append(copy_t.pop())
+
+    while copy_s:
+        copy_t.append(copy_s.pop())
+
+    while size_t:
+        copy_s.append(copy_r.pop())
+        size_t -= 1
+    while copy_t:
+        copy_s.append(copy_t.pop())
+
+    return copy_r, copy_s, copy_t
+
+
+# C-6.24
+# Describe how to implement the stack ADT using a single queue as an instance variable,
+# and only constant additional local memory within the method bodies.
+# What is the running time of the push(), pop(), and top() methods for your design?
+class StackBasedOnQueue:
+    def __init__(self):
+        self.items = []
+
+    def top(self):  # running time 1
+        return self.items.pop()
+
+    def push(self, item):  # running time 1
+        self.items.insert(0, item)
+
+    def pop(self):   # running time 1
+        return self.top()
