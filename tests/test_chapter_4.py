@@ -1,10 +1,26 @@
 import pytest
 
-from chapter_4.exercises import find_maximum, calculate_recursive_power, reverse, PermutationSolver, \
-    calculate_fast_recursive_power, calculate_harmonic_number, string_to_integer, find_max_and_min, \
-    find_logarithm_integer_part, solve_uniqueness_problem, calculate_product, solve_hanoi_towers_problem, \
-    find_unique_subsets, produce_binary_reprezentation_from_0_to_n, reverse_separated_elements, is_palindrome_recursive, \
-    is_more_vowels_in_string, swap_even_numbers_before_odd_numbers, find_pair_number_to_get_sum
+from chapter_4.exercises import (
+    find_maximum,
+    calculate_recursive_power,
+    reverse,
+    PermutationSolver,
+    calculate_fast_recursive_power,
+    calculate_harmonic_number,
+    string_to_integer,
+    find_max_and_min,
+    find_logarithm_integer_part,
+    solve_uniqueness_problem,
+    calculate_product,
+    solve_hanoi_towers_problem,
+    find_unique_subsets,
+    produce_binary_reprezentation_from_0_to_n,
+    reverse_separated_elements,
+    is_palindrome_recursive,
+    is_more_vowels_in_string,
+    swap_even_numbers_before_odd_numbers,
+    find_pair_number_to_get_sum,
+)
 
 
 # R-4.1

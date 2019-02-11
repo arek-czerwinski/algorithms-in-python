@@ -1,3 +1,6 @@
+import itertools
+from typing import List
+
 import pytest
 
 from chapter_6.exercises import (
@@ -9,7 +12,8 @@ from chapter_6.exercises import (
     ArrayStackWithMaxLen,
     FullException,
     ArrayStackWithInitialization,
-    EmptyException, reverse_values_in_stack, is_matched_html, _get_tag_name)
+    EmptyException, reverse_values_in_stack, is_matched_html, _get_tag_name,
+    permute_with_stack, get_all_subsets, ArithmeticExpressionToPostfixExpression)
 
 
 class TestTransferFromStackToStackFunction:
@@ -498,12 +502,95 @@ class TestIsMatchedHtmlFunction:
             ('body border="3"    with="45"', 'body'),
             ('body    border="3" with="45"', 'body'),
             (' a href="https://onet.pl', 'a')
-
-        ]
+                ]
     )
     def test__get_tag_name(self, raw_tag: str, expected_result):
         tag = _get_tag_name(raw_tag=raw_tag)
         assert tag == expected_result
 
 
+# class TestCalculateNonRecursiveCombinationsFunction:
+#     @pytest.mark.parametrize(
+#         'numbers, is_unique_permutations, expected_result', [
+#             (list(), False, list()),
+#             ([1], False, [[1]]),
+#             ([1, 2], False, [[1, 2], [2, 1], [1], [2]]),
+#
+#         ]
+#     )
+#     def calculate_non_recursive_combinations(self, numbers, is_unique_permutations, expected_result):
+#         actual_result = calculate_non_recursive_combinations(
+#             numbers=numbers,
+#             is_unique_permutations=is_unique_permutations
+#         )
+#         assert sorted(actual_result) == sorted(expected_result)
 
+class TestPermuteWithStackFunction:
+    @pytest.mark.parametrize(
+            'numbers, expected_result', [
+                (list(), itertools.permutations(list())),
+                ([1], itertools.permutations([1])),
+                ([1, 2], list(itertools.permutations([1, 2]))),
+                ([1, 2, 3], itertools.permutations([1, 2, 3])),
+                ([1, 2, 3, 4], itertools.permutations([1, 2, 3, 4])),
+            ]
+        )
+    def test_permute_with_stack(self, numbers, expected_result):
+        actual_result = permute_with_stack(numbers=numbers)
+        assert sorted(actual_result) == sorted(expected_result)
+
+
+class TestGetAllSubsets:
+    @pytest.mark.parametrize(
+        'numbers, expected_result', [
+            ([], [[]]),
+            ([1], [[], [1]]),
+            ([1, 2], [[], [1], [2], [1, 2]]),
+            ([1, 2, 3], [[], [1], [2], [1, 2], [3], [1, 3], [2, 3], [1, 2, 3]])
+        ]
+    )
+    def test_get_all_subsets(self, numbers, expected_result):
+        actual_result = get_all_subsets(numbers)
+        assert sorted(actual_result) == sorted(expected_result)
+
+
+class TestArithmeticExpressionToPostfixExpression:
+    @pytest.mark.parametrize(
+        'expression, expected_result', [
+            ('', list()),
+            ('1 + 1', [1.0, 1.0, '+']),
+            ('1 + 1 - 2', [1.0, 1.0, 2.0, '-', '+']),
+            ('1 + 1 * 3', [1.0, 1.0, 3.0, '*', '+']),
+            ('1 * 4 + 3', [1.0, 4.0, '*', 3.0, '+']),
+            ('1 + 2 * 5 + 1 + 2', [1.0, 2.0, 5.0, '*', '+', 1.0, 2.0, '+', '+']),
+            ('1 + 2 * 5 + 10 / 2', [1.0, 2.0, 5.0, '*', '+', 10.0, 2.0, '/', '+']),
+            ('( )', list()),
+            (' ( ( ( ( ) ) ) )', list()),
+            ('( 1 + 1 )', [1.0, 1.0, '+']),
+            ('1 + 2 + ( 2 * 6 ) + 5', [1.0, 2.0, 2.0, 6.0, '*', 5.0, '+', '+', '+']),
+            ('( ( 5 + 2 ) * ( 8 - 3 ) ) / 4', [5.0, 2.0, '+', 8.0, 3.0, '-', '*', 4.0, '/'])
+
+        ]
+    )
+    def test_parse(self, expression: str, expected_result: List[str]):
+        parser = ArithmeticExpressionToPostfixExpression()
+        actual_result = parser.parse(expression_elements=expression)
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'operators, expected_result', [
+            ([], None),
+            (['+'], '+'),
+            (['-', '+'], '+'),
+            (['-', '('], None),
+            (['-', '(', '('], None),
+            (['(', '-'], '-'),
+        ]
+    )
+    def test__find_last_arithmetic_operator(self, operators, expected_result):
+        actual_result = (
+            ArithmeticExpressionToPostfixExpression()._find_last_arithmetic_operator_before_first_open_parenthesis(
+                operators=operators,
+            )
+        )
+        assert actual_result == expected_result

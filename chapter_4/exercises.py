@@ -99,6 +99,7 @@ class PermutationSolver:
         _calculate_permutations(deep=self.deep_level, result=tuple(), elements=self.elements)
         return _result_of_permutations
 
+
     def check_existence_in_permutation_set(self, value):
         if not self._all_permutations:
             self._all_permutations = self.calculate_permutations()

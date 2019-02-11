@@ -38,6 +38,8 @@ import collections
 # ments from stack S onto stack T, so that the element that starts at the top
 # of S is the first to be inserted onto T, and the element at the bottom of S
 # ends up at the top of T.
+import itertools
+from typing import List, Tuple, Any, Dict
 
 
 def transfer_from_stack_to_stack(stack_a: list, stack_b: list):
@@ -362,3 +364,341 @@ def _get_tag_name(raw_tag: str):
     ]
 
     return raw_tags[0] if raw_tags else None
+
+
+# def calculate_non_recursive_combinations(numbers: List[int], is_unique_permutations=False):
+#     stack = list()
+#     stack.append(numbers)
+#     permutations = list()
+#
+#     while stack:
+#         current_element = stack.pop()
+#         if current_element:
+#             permutations.append(current_element)
+#             for index in range(len(current_element)):
+#                 sub_element_left = current_element[:index]
+#                 sub_element_right = current_element[index+1:]
+#                 stack.append(sub_element_left)
+#                 stack.append(sub_element_right)
+#
+#     if is_unique_permutations:
+#         return list(set(permutations))
+#     return permutations
+
+
+def shift_numbers(numbers, shift_index):
+    left_numbers = numbers[:shift_index]
+    right_numbers = numbers[shift_index:]
+    shifted_numbers = right_numbers + left_numbers
+    return tuple(shifted_numbers)
+
+
+# def permute_with_stack(numbers: List[int], r=None):
+#     pool = tuple(numbers)
+#     permutations = tuple()
+#     n = len(pool)
+#     r = n if r is None else r
+#     if r > n:
+#         return
+#     indices = list(range(n))
+#     cycles = list(range(n, n - r, -1))
+#     print(f'indices: {indices}, cycles {cycles}')
+#     permutations = permutations + (tuple(pool[i] for i in indices[:r]),)
+#     while n:
+#         print(f'PERMUTATIONS n: {n} : {permutations}')
+#         for i in reversed(range(r)):
+#             cycles[i] -= 1
+#             print(f'Changed cycles {cycles}')
+#             if cycles[i] == 0:
+#                 indices[i:] = indices[i + 1:] + indices[i:i + 1]
+#                 cycles[i] = n - i
+#             else:
+#                 j = cycles[i]
+#                 indices[i], indices[-j] = indices[-j], indices[i]
+#                 permutations = permutations + (tuple(pool[i] for i in indices[:r]),)
+#                 break
+#         else:
+#             print('PERMUTATIONS : ', permutations)
+#             return permutations
+
+# def permute_with_stack(numbers: List[int]):
+#     if not numbers:
+#         return [tuple()]
+#     if len(numbers) == 1:
+#         return [(1, )]
+#     permutations = []
+#     for shift_index in range(0, len(numbers)):
+#         shifted_numbers = shift_numbers(numbers, shift_index)
+#
+#         stack = list()
+#         for index in range(1, len(shifted_numbers)):
+#             stack.append((shifted_numbers[:index], shifted_numbers[index:]))
+#
+#         print(f'SHIFTED_NUMBERS {shifted_numbers} index: {shift_index}, stack: {stack}')
+#         while stack:
+#             left_side, right_side = stack.pop()
+#             if len(right_side) == 1:
+#                 # continue
+#                 permutation = left_side + right_side
+#                 print(
+#                     f'Adding permutation with right size is 1 : {permutation}, left_side:{left_side}, right_side:{right_side}, stack:{stack}',
+#                 )
+#                 permutations.append(left_side + right_side)
+#                 continue
+#             for left_side_index in range()
+#             for right_sift_index in range(1, len(right_side)):
+#                 permutation = left_side + shift_numbers(numbers=right_side, shift_index=right_sift_index)
+#                 print(
+#                     f'Adding permutation{permutation}, left_side:{left_side}, right_side:{right_side}, stack:{stack}',
+#                 )
+#                 permutations.append(left_side + shift_numbers(numbers=right_side, shift_index=right_sift_index))
+#
+#     print('PERMUTATIONS : ', permutations)
+#
+#     return tuple(set(permutations))
+
+
+# def permute_with_stack(numbers: List[int]):
+#     n = len(numbers)
+#     result = []
+#     c = n * [0]
+#
+#     result.append(tuple(numbers))
+#
+#     i = 0
+#     while i < n:
+#         if c[i] < i:
+#             if i % 2 == 0:
+#                 tmp = numbers[0]
+#                 numbers[0] = numbers[i]
+#                 numbers[i] = tmp
+#
+#             else:
+#
+#                 tmp = numbers[c[i]]
+#                 numbers[c[i]] = numbers[i]
+#                 numbers[i] = tmp
+#
+#             result.append(tuple(numbers))
+#             c[i] += 1
+#             i = 0
+#         else:
+#             c[i] = 0
+#             i += 1
+#
+#     return result
+
+class PermutationEntry:
+
+    def __init__(self, result: Tuple, permutation_state: Tuple) -> None:
+        self._result = result
+        self._permutation_state = permutation_state
+
+    @property
+    def result(self):
+        return self._result
+
+    @property
+    def permutation_state(self):
+        return self._permutation_state
+
+    def __repr__(self) -> str:
+        return f'[result:{self.result}, permutation_state:{self.permutation_state}]'
+
+
+# C-6.21
+# Describe a nonrecursive algorithm for enumerating all permutations of the numbers {1,2,...,n} using an explicit stack.
+def permute_with_stack(numbers: Tuple[int]):
+    stack = list()
+    stack.append(PermutationEntry(result=tuple(), permutation_state=numbers))
+
+    permutations = []
+
+    while stack:
+        element_on_top = stack.pop()
+        if len(element_on_top.permutation_state) == 0:
+            permutations.append(element_on_top.result)
+        else:
+            for index in range(len(element_on_top.permutation_state)):
+                old_result = element_on_top.result
+                old_permutation_state = element_on_top.permutation_state
+                new_result = old_result + tuple([old_permutation_state[index]])
+                permutation_state = (
+                        old_permutation_state[0: max(0, index)]
+                        + old_permutation_state[index+1: len(old_permutation_state)]
+                )
+                stack.append(PermutationEntry(result=new_result, permutation_state=permutation_state))
+
+    return permutations
+
+
+# C-6.21 Show how to use a stack S and a queue Q to generate all possible subsets of an n-element set T nonrecursively
+def get_all_subsets(elements: List[Any]):
+    stack = list()
+    stack.append(elements)
+
+    subsets = list()
+    subsets.append(list())
+
+    while stack and elements:
+        top_element = stack.pop()
+        subsets.append(top_element)
+        if not top_element:
+            continue
+        else:
+            for index in range(len(top_element)):
+                new_subset = top_element[:index] + top_element[index + 1:]
+                if new_subset:
+                    stack.append(new_subset)
+
+    unique_subsets = dict()
+    for subset in subsets:
+        unique_subsets[tuple(subset)] = subset
+
+    return unique_subsets.values()
+
+# C-6.22
+# Postfix notation is an unambiguous way of writing an arithmetic expression without parentheses.
+# It is defined so that if “(exp1)op(exp2)” is a normal, fully parenthesized expression whose operation is op,
+# the postfix version of this is “pexp1 pexp2 op”,
+# where pexp1 is the postfix version of exp1 and pexp2 is the postfix version of exp2.
+# The postfix version of a single number or variable is just that number or variable.
+# For example, the postfix version of “((5+2)∗(8−3))/4” is “5 2 + 8 3 − ∗ 4 /”.
+# Describe a nonrecursive way of evaluating an expression in postfix notation.
+
+
+ADDITION = '+'
+SUBTRACTION = '-'
+MULTIPLICATION = '*'
+DIVISION = '/'
+OPERATORS = tuple([ADDITION, SUBTRACTION, MULTIPLICATION, DIVISION])
+OPERATOR_PRIORITIES = {
+    ADDITION: 0,
+    SUBTRACTION: 0,
+    MULTIPLICATION: 1,
+    DIVISION: 1,
+}
+OPEN_PARENTHESIS = tuple(['(', '[', '{'])
+CLOSED_PARENTHESIS = tuple([')', ']', '}'])
+
+
+class ArithmeticExpressionToPostfixExpression:
+    def __init__(
+            self,
+            operators: Tuple[str, ...] = OPERATORS,
+            operator_priorities: Dict[str, int] = None,
+            open_parenthesis: Tuple[str, ...] = OPEN_PARENTHESIS,
+            closed_parenthesis: Tuple[str, ...] = CLOSED_PARENTHESIS,
+
+    ) -> None:
+        self._operators = operators
+        self._operator_priorities = operator_priorities if operator_priorities else OPERATOR_PRIORITIES
+        self._open_parenthesis = open_parenthesis
+        self._closed_parenthesis = closed_parenthesis
+
+    def parse(self, expression_elements: str) -> List[Any]:
+        if not expression_elements:
+            return list()
+        expression_elements = [element for element in expression_elements.split(sep=' ') if element]
+        postfix_notation = list()
+        operators = list()
+        for char in expression_elements:
+            if char.isdigit():
+                postfix_notation.append(float(char))
+            elif self._is_operator(char=char):
+                operators = self._move_operator_to_postfix_expression_if_needed(
+                    current_operand=char,
+                    operators=operators,
+                    postfix_notation=postfix_notation,
+                )
+                operators.append(char)
+            elif self._is_open_parenthesis(char=char):
+                operators.append(char)
+            elif self._is_closed_parenthesis(char=char):
+                self._move_operator_to_postfix_in_reverse_order_to_first_open_parenthesis(
+                    closed_parenthesis=char,
+                    postfix_notation=postfix_notation,
+                    operators=operators,
+                )
+            else:
+                raise ValueError(f'wrong character {char}!')
+
+        self._move_operator_to_postfix_in_reverse_order(
+            postfix_notation=postfix_notation,
+            operators=operators,
+        )
+        return postfix_notation
+
+    def _is_operator(self, char: str):
+        return char in self._operators
+
+    def _is_open_parenthesis(self, char: str):
+        return char in self._open_parenthesis
+
+    def _is_closed_parenthesis(self,char: str):
+        return char in self._closed_parenthesis
+
+    def _move_operator_to_postfix_expression_if_needed(self, current_operand, operators, postfix_notation):
+        last_operand = self._find_last_arithmetic_operator_before_first_open_parenthesis(
+            operators=operators,
+        )
+        if last_operand:
+            last_operand_priority = self._operator_priorities[last_operand]
+            current_operand_priority = self._operator_priorities[current_operand]
+            if last_operand_priority > current_operand_priority:
+                operators = self._move_operator_to_postfix_in_reverse_order(
+                    operators=operators,
+                    postfix_notation=postfix_notation,
+                )
+        return operators
+
+    def _find_open_parenthesis(self, closed_parenthesis: str):
+        for index in range(len(self._closed_parenthesis)):
+            if self._closed_parenthesis[index] == closed_parenthesis:
+                return self._open_parenthesis[index]
+
+        raise ValueError(f'Not known closed parenthesis {closed_parenthesis}!')
+
+    def _find_last_arithmetic_operator_before_first_open_parenthesis(self, operators: List[str]):
+        for index in range(len(operators) - 1, -1, -1):
+            possible_operator = operators[index]
+            if possible_operator in self._operators:
+                return possible_operator
+            if possible_operator in self._open_parenthesis:
+                break
+        return None
+
+    def _move_operator_to_postfix_in_reverse_order(
+            self,
+            postfix_notation: List[Any],
+            operators: List[str],
+    ):
+        while operators:
+            operator = operators.pop()
+            if (
+                    self._is_open_parenthesis(char=operator)
+                    or self._is_closed_parenthesis(char=operator)
+            ):
+                raise ValueError(
+                    f'Passed wrong expression! '
+                    f'During passing operators to postfix expression found parenthesis {operator}'
+                )
+            postfix_notation.append(operator)
+        return operators
+
+    def _move_operator_to_postfix_in_reverse_order_to_first_open_parenthesis(
+            self,
+            closed_parenthesis: str,
+            postfix_notation: List[Any],
+            operators: List[str],
+    ):
+        closed_parenthesis = self._find_open_parenthesis(closed_parenthesis=closed_parenthesis)
+        while operators:
+            operator = operators.pop()
+            if operator == closed_parenthesis:
+                break
+            postfix_notation.append(operator)
+
+        return operators
+
+
