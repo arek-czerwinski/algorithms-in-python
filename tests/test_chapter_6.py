@@ -1,5 +1,5 @@
 import itertools
-from typing import List
+from typing import List, Dict
 
 import pytest
 
@@ -14,7 +14,7 @@ from chapter_6.exercises import (
     ArrayStackWithInitialization,
     EmptyException, reverse_values_in_stack, is_matched_html, _get_tag_name,
     permute_with_stack, get_all_subsets, ArithmeticExpressionToPostfixExpression,
-    move_elements_stack_t_to_stack_s_with_original_sequence)
+    move_elements_stack_t_to_stack_s_with_original_sequence, SimpleQueueWithTwoStacks, has_element_in_stack)
 
 
 class TestTransferFromStackToStackFunction:
@@ -521,7 +521,7 @@ class TestIsMatchedHtmlFunction:
 #     )
 #     def calculate_non_recursive_combinations(self, numbers, is_unique_permutations, expected_result):
 #         actual_result = calculate_non_recursive_combinations(
-#             numbers=numbers,
+#             numbers=numbers,Ń
 #             is_unique_permutations=is_unique_permutations
 #         )
 #         assert sorted(actual_result) == sorted(expected_result)
@@ -620,3 +620,130 @@ class TestMoveElementsStackTToStackSWithOriginalSequence:
         assert new_r == expected_r
         assert new_s == expected_s
         assert new_t == expected_t
+
+
+class TestSimpleQueueWithTwoStacks:
+    @pytest.mark.parametrize(
+        'elements_to_add, expected_result', [
+            ([1], {'_stack_for_adding_elements': [1], '_stack_for_removing_elements': list()}),
+            ([1, 2], {'_stack_for_adding_elements': [1, 2], '_stack_for_removing_elements': list()}),
+            ([1, 2, 3], {'_stack_for_adding_elements': [1, 2, 3], '_stack_for_removing_elements': list()})
+        ]
+    )
+    def test_enqueue(self, elements_to_add: List[object], expected_result: Dict[str, object]):
+        queue = SimpleQueueWithTwoStacks()
+        for element in elements_to_add:
+            queue.enqueue(element)
+
+        assert vars(queue) == expected_result
+
+    @pytest.mark.parametrize(
+        'stack_for_adding_elements, stack_for_removing_elements, expected_result', [
+            (list(), list(), True),
+            ([1], list(), False),
+            (list(), [1], False),
+        ]
+    )
+    def test_is_empty(
+            self,
+            stack_for_adding_elements: List[object],
+            stack_for_removing_elements: List[object],
+            expected_result: bool,
+    ):
+        queue = SimpleQueueWithTwoStacks(
+            stack_for_adding_elements=stack_for_adding_elements,
+            stack_for_removing_elements=stack_for_removing_elements,
+        )
+        assert queue.is_empty() == expected_result
+
+    @pytest.mark.parametrize(
+        'elements_to_add, expected_result', [
+            ([1], 1),
+            ([1, 2], 2),
+            ([1, 2, 3], 3),
+        ]
+    )
+    def test_first(self, elements_to_add: List[object], expected_result: object):
+        queue = SimpleQueueWithTwoStacks()
+        self._add_element_to_queue(queue=queue, elements=elements_to_add)
+
+        assert queue.first() == expected_result
+
+    @staticmethod
+    def _add_element_to_queue(queue: SimpleQueueWithTwoStacks, elements: List[object]):
+        for element in elements:
+            queue.enqueue(element)
+
+    def test_first_negative_scenario_with_no_elements_in_queue(self):
+        queue = SimpleQueueWithTwoStacks()
+        with pytest.raises(ValueError):
+            queue.first()
+
+    @pytest.mark.parametrize(
+        'stack_for_adding_elements, stack_for_removing_elements, expected_result', [
+            (list(), list(), 0),
+            ([1], list(), 1),
+            (list(), [1], 1),
+            ([1], [1], 2),
+            ([1, 2], [1, 2], 4),
+        ]
+    )
+    def test___len__(
+            self,
+            stack_for_adding_elements: List[object],
+            stack_for_removing_elements: List[object],
+            expected_result: int,
+    ):
+        queue = SimpleQueueWithTwoStacks(
+            stack_for_adding_elements=stack_for_adding_elements,
+            stack_for_removing_elements=stack_for_removing_elements,
+        )
+        assert len(queue) == expected_result
+
+    @pytest.mark.parametrize(
+        'stack_for_adding_elements, stack_for_removing_elements, expected_result', [
+            ([1], list(), 1),
+            (list(), [1], 1),
+            ([1], [2], 2),
+            ([1, 2], [3, 4], 4),
+            ([4, 3], [], 4)
+        ]
+    )
+    def test_dequeue(
+            self,
+            stack_for_adding_elements: List[object],
+            stack_for_removing_elements: List[object],
+            expected_result: bool,
+    ):
+        queue = SimpleQueueWithTwoStacks(
+            stack_for_adding_elements=stack_for_adding_elements,
+            stack_for_removing_elements=stack_for_removing_elements,
+        )
+        assert queue.dequeue() == expected_result
+
+    def test_dequeue_negative_scenario_with_no_elements_in_queue(self):
+        queue = SimpleQueueWithTwoStacks()
+        with pytest.raises(ValueError):
+            queue.dequeue()
+
+
+class TestIsContainElementInStackFunction:
+    @pytest.mark.parametrize(
+        'stack, element_to_find, expected_result', [
+            ([], 1, False),
+            ([2], 1, False),
+            ([2, 3, 4, 5], 1, False),
+            ([2, 3, 4, 1], 1, True),
+            ([2, 3, 1, 3], 1, True),
+            ([1, 3, 6, 3], 1, True),
+            ([1, 3, 1, 3], 1, True),
+        ]
+    )
+    def test_has_element_in_stack(self, stack, element_to_find,  expected_result):
+        stack_copy = list(stack)
+        actaul_result = has_element_in_stack(
+            stack=stack,
+            element_to_find=element_to_find
+        )
+        assert stack == stack_copy, 'Elements should be in the same order'
+        assert actaul_result == expected_result

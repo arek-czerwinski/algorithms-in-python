@@ -39,7 +39,7 @@ import collections
 # of S is the first to be inserted onto T, and the element at the bottom of S
 # ends up at the top of T.
 import itertools
-from typing import List, Tuple, Any, Dict
+from typing import List, Tuple, Any, Dict, Optional
 
 
 def transfer_from_stack_to_stack(stack_a: list, stack_b: list):
@@ -750,3 +750,72 @@ class StackBasedOnQueue:
 
     def pop(self):   # running time 1
         return self.top()
+
+
+# C-6.25
+# Describe how to implement the queue ADT using two stacks as instance variables,
+# such that all queue operations execute in amortized O(1) time.
+# Give a formal proof of the amortized bound.
+class SimpleQueueWithTwoStacks:
+    def __init__(
+            self,
+            stack_for_adding_elements: Optional[List[object]] = None,
+            stack_for_removing_elements: Optional[List[object]] = None,
+    ):
+        self._stack_for_adding_elements = stack_for_adding_elements if stack_for_adding_elements else list()
+        self._stack_for_removing_elements = stack_for_removing_elements if stack_for_removing_elements else list()
+
+    def enqueue(self, element: object) -> None:
+        self._stack_for_adding_elements.append(element)
+
+    def dequeue(self) -> object:
+        if len(self) == 0:
+            raise ValueError('The queue is empty!')
+        if not self._stack_for_removing_elements:
+            self.move_elements_to_stack_for_removing()
+
+        return self._stack_for_removing_elements.pop()
+
+    def move_elements_to_stack_for_removing(self):
+        while self._stack_for_adding_elements:
+            element = self._stack_for_adding_elements.pop()
+            self._stack_for_removing_elements.append(element)
+
+    def first(self) -> object:
+        if not self._stack_for_adding_elements:
+            raise ValueError('The queue is empty!')
+        size = len(self._stack_for_adding_elements)
+        return self._stack_for_adding_elements[size - 1]
+
+    def is_empty(self) -> bool:
+        return not bool(self._stack_for_adding_elements or self._stack_for_removing_elements)
+
+    def __len__(self):
+        return len(self._stack_for_adding_elements) + len(self._stack_for_removing_elements)
+
+
+# C-6.26
+# Describe how to implement the double-ended queue ADT using two stacks as instance variables.
+# What are the running times of the methods?
+# Solution
+# Solution is similar like in # C-6.25 with small difference that elements can be moved on both direction
+
+# C-6.27
+# Suppose you have a stack S containing n elements and a queue Q that is initially empty.
+# Describe how you can use Q to scan S to see if it contains a certain element x, with the additional constraint
+# that your algorithm must return the elements back to S in their original order. You may only use S, Q,
+# and a constant number of other variables.
+def has_element_in_stack(stack: list, element_to_find: object):
+    is_found = False
+    queue = list()
+    while stack:
+        current_element = stack.pop()
+        queue.append(current_element)
+        if current_element == element_to_find:
+            is_found = True
+            break
+
+    while queue:
+        stack.append(queue.pop())
+
+    return is_found
