@@ -1,4 +1,3 @@
-
 import collections
 
 # R-6.1 What values are returned during the following series of stack operations, if
@@ -38,8 +37,9 @@ import collections
 # ments from stack S onto stack T, so that the element that starts at the top
 # of S is the first to be inserted onto T, and the element at the bottom of S
 # ends up at the top of T.
-import itertools
-from typing import List, Tuple, Any, Dict, Optional
+from typing import List, Tuple, Any, Dict, Optional, Callable
+
+from utils.errors import EmptyCollection
 
 
 def transfer_from_stack_to_stack(stack_a: list, stack_b: list):
@@ -198,6 +198,7 @@ stack_of_three_numbers = [2, 3, 4]
 x = stack_of_three_numbers.pop()
 x = x if x > stack_of_three_numbers[0] else stack_of_three_numbers.pop()
 
+
 # Probability 2/3 occurs because there are three numbers which are all possibilities.
 # For this task we can take only two numbers and each pick is independent from each other and this
 # is the reason why the probability is 2/3.
@@ -220,7 +221,7 @@ class ArrayStackWithMaxLen:
     # throw a Full exception (defined similarly to Empty).
     def __init__(self, maxlen=None):
         """Create an empty stack."""
-        self._data = []                       # nonpublic list instance
+        self._data = []  # nonpublic list instance
         self._maxlen = maxlen
 
     def __len__(self):
@@ -235,7 +236,7 @@ class ArrayStackWithMaxLen:
     def push(self, e):
         """Add element e to the top of the stack."""
         self._is_stack_full()
-        self._data.append(e)                  # new item stored at end of list
+        self._data.append(e)  # new item stored at end of list
 
     def _is_stack_full(self):
         if self._maxlen is not None and len(self._data) + 1 > self._maxlen:
@@ -248,7 +249,7 @@ class ArrayStackWithMaxLen:
         """
         if self.is_empty():
             raise EmptyException('Stack is empty')
-        return self._data[-1]                 # the last item in the list
+        return self._data[-1]  # the last item in the list
 
     def pop(self):
         """Remove and return the element from the top of the stack (i.e., LIFO).
@@ -265,7 +266,8 @@ class ArrayStackWithMaxLen:
 # this time preallocating an underlying list with length equal to the stack’s maximum capacity.
 class ArrayStackWithInitialization:
     """LIFO Stack implementation using a Python list as underlying storage."""
-    def __init__(self, maxlen: int=1):
+
+    def __init__(self, maxlen: int = 1):
         """Create an empty stack."""
         self._data = [None] * maxlen
         self._top_of_stack_index = 0
@@ -298,7 +300,7 @@ class ArrayStackWithInitialization:
         """
         if self.is_empty():
             raise EmptyException('Stack is empty')
-        return self._data[self._top_of_stack_index - 1]                 # the last item in the list
+        return self._data[self._top_of_stack_index - 1]  # the last item in the list
 
     def pop(self):
         """Remove and return the element from the top of the stack (i.e., LIFO).
@@ -336,24 +338,24 @@ def reverse_values_in_stack(stack: list):
 def is_matched_html(raw):
     """Return True if all HTML tags are properly match; False otherwise."""
     stack = ArrayStackWithMaxLen()
-    j = raw.find('<')               # find first '<' character (if any)
+    j = raw.find('<')  # find first '<' character (if any)
     while j != -1:
-        k = raw.find('>', j+1)        # find next '>' character
+        k = raw.find('>', j + 1)  # find next '>' character
         if k == -1:
-            return False                # invalid tag
+            return False  # invalid tag
         # tag = raw[j+1:k]              # strip away < >
-        tag = _get_tag_name(raw_tag=raw[j+1: k])
+        tag = _get_tag_name(raw_tag=raw[j + 1: k])
         if not tag:
             return False
-        if not tag.startswith('/'):   # this is opening tag
+        if not tag.startswith('/'):  # this is opening tag
             stack.push(tag)
-        else:                         # this is closing tag
+        else:  # this is closing tag
             if stack.is_empty():
-                return False              # nothing to match with
+                return False  # nothing to match with
             if tag[1:] != stack.pop():
-                return False              # mismatched delimiter
-        j = raw.find('<', k+1)        # find next '<' character (if any)
-    return stack.is_empty()             # were all opening tags matched?
+                return False  # mismatched delimiter
+        j = raw.find('<', k + 1)  # find next '<' character (if any)
+    return stack.is_empty()  # were all opening tags matched?
 
 
 def _get_tag_name(raw_tag: str):
@@ -525,7 +527,7 @@ def permute_with_stack(numbers: Tuple[int]):
                 new_result = old_result + tuple([old_permutation_state[index]])
                 permutation_state = (
                         old_permutation_state[0: max(0, index)]
-                        + old_permutation_state[index+1: len(old_permutation_state)]
+                        + old_permutation_state[index + 1: len(old_permutation_state)]
                 )
                 stack.append(PermutationEntry(result=new_result, permutation_state=permutation_state))
 
@@ -556,6 +558,7 @@ def get_all_subsets(elements: List[Any]):
         unique_subsets[tuple(subset)] = subset
 
     return unique_subsets.values()
+
 
 # C-6.22
 # Postfix notation is an unambiguous way of writing an arithmetic expression without parentheses.
@@ -635,7 +638,7 @@ class ArithmeticExpressionToPostfixExpression:
     def _is_open_parenthesis(self, char: str):
         return char in self._open_parenthesis
 
-    def _is_closed_parenthesis(self,char: str):
+    def _is_closed_parenthesis(self, char: str):
         return char in self._closed_parenthesis
 
     def _move_operator_to_postfix_expression_if_needed(self, current_operand, operators, postfix_notation):
@@ -748,7 +751,7 @@ class StackBasedOnQueue:
     def push(self, item):  # running time 1
         self.items.insert(0, item)
 
-    def pop(self):   # running time 1
+    def pop(self):  # running time 1
         return self.top()
 
 
@@ -819,3 +822,78 @@ def has_element_in_stack(stack: list, element_to_find: object):
         stack.append(queue.pop())
 
     return is_found
+
+
+# C-6.28
+# Modify the ArrayQueue implementation so that the queue’s capacity is limited to maxlen elements,
+# where maxlen is an optional parameter to the constructor (that defaults to None).
+# If enqueue is called when the queue is at full capacity, throw a Full exception (defined similarly to Empty).
+class ArrayQueue:
+    DEFAULT_CAPACITY = 10          # moderate capacity for all new queues
+
+    def __init__(self, max_length: int = None):
+        self._data = [None] * ArrayQueue.DEFAULT_CAPACITY
+        self._size = 0
+        self._front = 0
+        self._max_length = max_length or ArrayQueue.DEFAULT_CAPACITY
+
+    def __len__(self):
+        return self._size
+
+    def is_empty(self):
+        return self._size == 0
+
+    def first(self):
+        if self.is_empty():
+            raise EmptyCollection('Queue is empty')
+        return self._data[self._front]
+
+    def dequeue(self):
+        if self.is_empty():
+            raise EmptyCollection('Queue is empty')
+        answer = self._data[self._front]
+        self._data[self._front] = None
+        self._front = (self._front + 1) % len(self._data)
+        self._size -= 1
+        return answer
+
+    def enqueue(self, e):
+        if self._size == len(self._data):
+            self._resize(2 * len(self.data))
+        avail = (self._front + self._size) % len(self._data)
+        self._data[avail] = e
+        self._size += 1
+
+    def _resize(self, cap):
+        # added condition for checking max length
+        if cap >= self._max_length:
+            raise FullException('The collection is full!')
+        old = self._data
+        self._data = [None] * cap
+        walk = self._front
+        for k in range(self._size):
+            self._data[k] = old[walk]
+            walk = (1 + walk) % len(old)
+        self._front = 0
+
+    # C-6.29
+    # In certain applications of the queue ADT, it is common to repeatedly dequeue an element, process
+    # it in some way, and then immediately enqueue the same element.
+    # Modify the ArrayQueue implementation to include a rotate()
+    # method that has semantics identical to the combination, Q.enqueue(Q.dequeue( )).
+    # However, your implementation should be more efficient than making two separate calls
+    # (for example, because there is no need to modify size).
+
+    # In my opinion there are two possible options
+    # 1. rotate function should return first or last element by reference. The client will do something with passed
+    # object but still the object will be in queue
+    # 2. Other option would be adding additional parameter called do_something which is a function which take one
+    # parameter which is element from queue. The function will change something in the stated of passed object and later
+    # it will return reference to changed object.
+    def rotate_1(self):
+        return self.first()
+
+    def rotate_2(self, do_something: Callable):
+        element = self._data[self._front]
+        processed_element = do_something(element)
+        self._data[self._front] = processed_element
