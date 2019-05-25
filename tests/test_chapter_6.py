@@ -14,7 +14,8 @@ from chapter_6.exercises import (
     ArrayStackWithInitialization,
     EmptyException, reverse_values_in_stack, is_matched_html, _get_tag_name,
     permute_with_stack, get_all_subsets, ArithmeticExpressionToPostfixExpression,
-    move_elements_stack_t_to_stack_s_with_original_sequence, SimpleQueueWithTwoStacks, has_element_in_stack)
+    move_elements_stack_t_to_stack_s_with_original_sequence, SimpleQueueWithTwoStacks, has_element_in_stack, ArrayDeque)
+from utils.errors import EmptyCollection
 
 
 class TestTransferFromStackToStackFunction:
@@ -60,6 +61,7 @@ class TestReverseFunction:
     def test_reverse(self, elements, expected_result):
         actual_result = reverse(elements=elements)
         assert actual_result == expected_result
+
 
 # region TestArithmeticGroupingSymbolValidator
 # region test___init__
@@ -747,3 +749,244 @@ class TestIsContainElementInStackFunction:
         )
         assert stack == stack_copy, 'Elements should be in the same order'
         assert actaul_result == expected_result
+
+
+class TestArrayDeque:
+    @pytest.mark.parametrize(
+        'initial_length, array, expected_result', [
+            (1, None, {'_index_after_last_element': 0, '_size': 0, '_array': [None]}),
+        ]
+    )
+    def test___init__passed_array_is_none(self, initial_length, array, expected_result):
+        array_deque = ArrayDeque(initial_length=initial_length, array=array)
+        actual_result = array_deque.to_dict()
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'array, expected_result', [
+            (
+                    [None, None, None, None],
+                    {'_index_after_last_element': 0, '_size': 0, '_array': [None, None, None, None]}
+            ),
+        ]
+    )
+    def test___init__passed_4_element_array(self, array, expected_result):
+        array_deque = ArrayDeque(array=array)
+        actual_result = array_deque.to_dict()
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'array, expected_result', [
+            (list(), {'_index_after_last_element': 0, '_size': 0, '_array': [None] * 16}),
+        ]
+    )
+    def test___init__passed_empty_array(self, array, expected_result):
+        array_deque = ArrayDeque(array=array)
+        actual_result = array_deque.to_dict()
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'expected_result', [
+            ({'_index_after_last_element': 0, '_size': 0, '_array': [None]*16})
+        ]
+    )
+    def test___init__with_default_values(self, expected_result):
+        array_deque = ArrayDeque()
+        actual_result = array_deque.to_dict()
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'index_after_last_element, expected_result', [
+            (15, 15),
+            (14, 14),
+        ]
+    )
+    def test__get_index_after_last_element(self, index_after_last_element, expected_result):
+        array_queue = ArrayDeque()
+        array_queue._index_after_last_element = index_after_last_element
+        actual_result = array_queue._get_index_after_last_element()
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'index_after_last_element, size, initial_length, expected_result', [
+            (0, 0, 4, 0),
+            (0, 1, 4, 2),
+            (1, 2, 4, 2),
+            (1, 3, 4, 1),
+            (1, 4, 4, 0),
+        ]
+    )
+    def test__get_index_before_first_element(self, index_after_last_element, size, initial_length,  expected_result):
+        array_queue = ArrayDeque(initial_length=initial_length)
+        array_queue._index_after_last_element = index_after_last_element
+        array_queue._size = size
+        actual_result = array_queue._get_index_before_first_element()
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'index_after_last_element, size, initial_length, expected_result', [
+            (0, 1, 4, 3),
+            (1, 2, 4, 3),
+            (1, 3, 4, 2),
+            (1, 4, 4, 1),
+        ]
+    )
+    def test__get_effective_first_element_index(self, index_after_last_element, size, initial_length,  expected_result):
+        array_queue = ArrayDeque(initial_length=initial_length)
+        array_queue._index_after_last_element = index_after_last_element
+        array_queue._size = size
+        actual_result = array_queue._get_effective_first_element_index()
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'index_after_last_element, size, initial_length', [
+            (0, 0, 4),
+        ]
+    )
+    def test__get_effective_first_element_index_if_array_is_empty_should_rise_exception(
+            self,
+            index_after_last_element,
+            size,
+            initial_length,
+    ):
+        array_queue = ArrayDeque(initial_length=initial_length)
+        array_queue._index_after_last_element = index_after_last_element
+        array_queue._size = size
+        with pytest.raises(EmptyCollection):
+            array_queue._get_effective_first_element_index()
+
+    @pytest.mark.parametrize(
+        'index_after_last_element, size, initial_length', [
+            (0, 0, 4),
+        ]
+    )
+    def test__get_effective_last_element_index_if_array_is_empty_should_rise_exception(
+            self,
+            index_after_last_element,
+            size,
+            initial_length,
+    ):
+        array_queue = ArrayDeque(initial_length=initial_length)
+        array_queue._index_after_last_element = index_after_last_element
+        array_queue._size = size
+        with pytest.raises(EmptyCollection):
+            array_queue._get_effective_last_element_index\
+                ()
+
+    @pytest.mark.parametrize(
+        'index_after_last_element, size, initial_length, expected_result', [
+            (0, 1, 4, 3),
+            (1, 2, 4, 0),
+            (1, 3, 4, 0),
+            (1, 4, 4, 0),
+            (3, 4, 4, 2),
+        ]
+    )
+    def test__get_effective_last_element_index(self, index_after_last_element, size, initial_length, expected_result):
+        array_queue = ArrayDeque(initial_length=initial_length)
+        array_queue._index_after_last_element = index_after_last_element
+        array_queue._size = size
+        actual_result = array_queue._get_effective_last_element_index()
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'index_after_last_element, size, array, element, expected_result', [
+            (0, 1, [None, None, None, '1'], 'element_to_add', {
+                '_index_after_last_element': 0,
+                '_size': 2,
+                '_array': [None, None, 'element_to_add', '1']}
+             ),
+            (0, 0, [None, None, None, None], 'element_to_add', {
+                '_index_after_last_element': 1,
+                '_size': 1,
+                '_array': ['element_to_add', None, None, None]}
+             ),
+            (3, 0, [None, None, None, None], 'element_to_add', {
+                '_index_after_last_element': 0,
+                '_size': 1,
+                '_array': [None, None, None, 'element_to_add']}
+             ),
+            (3, 3, ['1', '2', '3', None], 'element_to_add', {
+                '_index_after_last_element': 3,
+                '_size': 4,
+                '_array': ['1', '2', '3', 'element_to_add']}
+             ),
+            (3, 4, ['1', '2', '3', '4'], 'element_to_add', {
+                '_index_after_last_element': 4,
+                '_size': 5,
+                '_array': ['4', '1', '2', '3', None, None, None, 'element_to_add']}
+             ),
+        ]
+    )
+    def test_add_first(self, index_after_last_element, size, array, element,  expected_result):
+        array_queue = ArrayDeque(array=array)
+        array_queue._index_after_last_element = index_after_last_element
+        array_queue._size = size
+        array_queue.add_first(element)
+        actual_result = array_queue.to_dict()
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'index_after_last_element, size, array, element, expected_result', [
+            (0, 0, [None, None, None, None], 'element_to_add', {
+                '_index_after_last_element': 1,
+                '_size': 1,
+                '_array': ['element_to_add', None, None, None]}
+             ),
+            (0, 1, [None, None, None, '1'], 'element_to_add', {
+                '_index_after_last_element': 1,
+                '_size': 2,
+                '_array': ['element_to_add', None, None, '1']}
+             ),
+            (3, 1, [None, None, '1', None], 'element_to_add', {
+                '_index_after_last_element': 0,
+                '_size': 2,
+                '_array': [None, None, '1', 'element_to_add']}
+             ),
+            (3, 3
+             , ['1', '2', '3', None], 'element_to_add', {
+                '_index_after_last_element': 0,
+                '_size': 4,
+                '_array': ['1', '2', '3', 'element_to_add']}
+             ),
+            (3, 4, ['1', '2', '3', '4'], 'element_to_add', {
+                '_index_after_last_element': 5
+
+                ,
+                '_size': 5,
+                '_array': ['4', '1', '2', '3', 'element_to_add'
+                    , None, None, None]}
+             ),
+        ]
+    )
+    def test_add_last(self, index_after_last_element, size, array, element,  expected_result):
+        array_queue = ArrayDeque(array=array)
+        array_queue._index_after_last_element = index_after_last_element
+        array_queue._size = size
+        array_queue.add_last(element)
+        actual_result = array_queue.to_dict()
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'index_after_last_element, size, array, expected_result', [
+            (1, 1, ['element_to_return', None, None, None], 'element_to_return'),
+        ]
+    )
+    def test_first(self, index_after_last_element, size, array,  expected_result):
+        array_queue = ArrayDeque(array=array)
+        array_queue._index_after_last_element = index_after_last_element
+        array_queue._size = size
+        actual_result = array_queue.first()
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'index_after_last_element, size, array, expected_result', [
+            (1, 1, ['element_to_return', None, None, None], 'element_to_return'),
+        ]
+    )
+    def test_last(self, index_after_last_element, size, array, expected_result):
+        array_queue = ArrayDeque(array=array)
+        array_queue._index_after_last_element = index_after_last_element
+        array_queue._size = size
+        actual_result = array_queue.last()
+        assert actual_result == expected_result

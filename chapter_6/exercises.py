@@ -859,7 +859,7 @@ class ArrayQueue:
 
     def enqueue(self, e):
         if self._size == len(self._data):
-            self._resize(2 * len(self.data))
+            self._resize(2 * len(self._data))
         avail = (self._front + self._size) % len(self._data)
         self._data[avail] = e
         self._size += 1
@@ -897,3 +897,141 @@ class ArrayQueue:
         element = self._data[self._front]
         processed_element = do_something(element)
         self._data[self._front] = processed_element
+
+
+# C-6.30
+# Alice has two queues, Q and R, which can store integers. Bob gives Alice 50 odd integers and 50 even integers
+# and insists that she store all 100 integers in Q and R.
+# They then play a game where Bob picks Q or R at random and then applies the round-robin scheduler,
+# described in the chapter, to the chosen queue a random number of times.
+# If the last number to be processed at the end of this game was odd, Bob wins. Otherwise,
+# Alice wins. How can Alice allocate integers to queues to optimize her chances of winning?
+# What is her chance of winning?
+
+# Alice should put on an even integer in Q and all the other 99 integers in R.
+# The chance that Bob picks Q is 0.5, where Alice must win.
+# The chance that Bob pocks R is also 0.5,
+# where Alice wins at the chance of 49/99 (49 even integers out of 99 overall integers).
+# This gives her 0.5*(1+49/99) = 74/99 chance of winning.
+
+
+# C-6.31
+# Suppose Bob has four cows that he wants to take across a bridge, but only one yoke, which can hold up to two
+# cows, side by side, tied to the yoke.
+# The yoke is too heavy for him to carry across the bridge, but he can tie (and untie) cows to it in no time at all.
+# Of his four cows, Mazie can cross the bridge in 2 minutes,
+# Daisy can cross it in 4 minutes,
+# Crazy can cross it in 10 minutes, and Lazy can cross it in 20 minutes.
+# Of course, when two cows are tied to the yoke, they must go at the speed of the slower cow.
+# Describe how Bob can get all his cows across the bridge in 34 minutes.
+# The solution is to walk 2 of the fastest cows across the bridge without the yoke.
+# 1- So walk Maxie across in 2 minutes.
+# 2- Bob walks back to the start in 2 minutes. (
+# We can assume that if Bob can walk there in 2 minutes he can also walk back in 2 minutes).
+# 3- Bob walks Daisy across in 4 minutes.
+# 4 - Bob walks back to the start in 2 minutes.
+# 5 - Crazy and Lazy are walked across with the yoke in 20 minutes.
+
+
+# p-6.32 Give a complete ArrayDeque implementation of the double-ended queue ADT as sketched in Section 6.3.2.
+class ArrayDeque:
+    def __init__(self, initial_length: int = 16, array: Optional[List[Any]] = None) -> None:
+        self._index_after_last_element = 0
+        self._size = 0
+        self._array = array or [None] * initial_length
+
+    def to_dict(self):
+        return {
+            '_index_after_last_element': self._index_after_last_element,
+            '_size': self._size,
+            '_array': self._array,
+        }
+
+    def add_first(self, element: Any):
+        self._should_copy_elements_from_array_to_new_array()
+
+        index_of_element_to_add = self._get_index_before_first_element()
+        self._add_element_to_array(element=element, index=index_of_element_to_add)
+
+        # when an array is empty _index_after_last_element should
+        # be increased to point where to add new element in last position
+        if len(self) == 1:
+            self._increase_index_after_last_element()
+
+    def _should_copy_elements_from_array_to_new_array(self):
+        if self._is_array_full():
+            new_array = [None] * (self._size * 2)
+            self._copy_elements_to_new_array(new_array)
+            self._array = new_array
+            self._index_after_last_element = self._size
+
+    def _copy_elements_to_new_array(self, new_array):
+        first_element_index = self._get_effective_first_element_index()
+        for shift in range(self._size):
+            effective_index = self._get_effective_index(first_element_index + shift)
+            new_array[shift] = self._array[effective_index]
+
+    def _add_element_to_array(self, element: Any, index: int):
+        self._array[index] = element
+        self._increase_size()
+
+    def _increase_size(self):
+        self._size += 1
+        if self._size > len(self._array):
+            raise FullException(f'Increased size of array to {self._size} but size of array is {len(self._array)}')
+
+    def _increase_index_after_last_element(self):
+        self._index_after_last_element = self._get_effective_index(self._index_after_last_element + 1)
+
+    def add_last(self, element):
+        self._should_copy_elements_from_array_to_new_array()
+
+        index_of_element_to_add = self._get_index_after_last_element()
+        self._add_element_to_array(element=element, index=index_of_element_to_add)
+        self._increase_index_after_last_element()
+
+    def delete_first(self):
+        pass  # similar like to add first element
+
+    def delete_last(self):
+        pass  # similar like to add last element
+
+    def first(self):
+        index_of_first_element = self._get_effective_first_element_index()
+        return self._array[index_of_first_element]
+
+    def last(self):
+        index_of_first_element = self._get_effective_last_element_index()
+        return self._array[index_of_first_element]
+
+    def is_empty(self):
+        return self._size == 0
+
+    def __len__(self):
+        return self._size
+
+    def _is_array_full(self):
+        return self._size == len(self._array)
+
+    def _get_index_after_last_element(self):
+        return self._index_after_last_element
+
+    def _get_index_before_first_element(self):
+        if self.is_empty():
+            return self._index_after_last_element
+        return self._get_effective_index(self._get_index_after_last_element() - self._size - 1)
+
+    def _get_effective_first_element_index(self):
+        self.raise_exception_if_empty()
+        return self._get_effective_index((self._get_index_before_first_element() + 1))
+
+    def raise_exception_if_empty(self):
+        if self.is_empty():
+            raise EmptyCollection('This collection is empty')
+
+    def _get_effective_last_element_index(self):
+        self.raise_exception_if_empty()
+        return self._get_effective_index(self._get_index_after_last_element() - 1)
+
+    def _get_effective_index(self, index: int):
+        return index % len(self._array)
