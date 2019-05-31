@@ -1035,3 +1035,69 @@ class ArrayDeque:
 
     def _get_effective_index(self, index: int):
         return index % len(self._array)
+
+
+# p.6.33
+# Give an array-based implementation of a double-ended queue supporting all of the public behaviors shown in
+# Table 6.4 for the collections.deque class, including use of the maxlen optional parameter.
+# When a length- limited deque is full, provide semantics similar to the collections.deque class,
+# whereby a call to insert an element on one end of a deque causes an element to be lost from the opposite side.
+def add_first(self, element: Any):
+    self._should_copy_elements_from_array_to_new_array()
+    if self.__is_array_full:
+        self.delete_last()
+    index_of_element_to_add = self._get_index_before_first_element()
+    self._add_element_to_array(element=element, index=index_of_element_to_add)
+
+    # when an array is empty _index_after_last_element should
+    # be increased to point where to add new element in last position
+    if len(self) == 1:
+            self._increase_index_after_last_element()
+
+
+# P-6.35 The introduction of Section 6.1 notes that stacks are often used to provide “undo” support in applications
+# like a Web browser or text editor. While support for undo can be implemented with an unbounded stack,
+# many applications provide only limited support for such an undo history, with a fixed-capacity stack. When push is
+# invoked with the stack at full capacity, rather than throwing a Full exception (as described in Exercise C-6.16),
+# a more typical semantic is to accept the pushed element at the top while “leaking” the oldest element from the
+# bottom of the stack to make room. Give an implementation of such a LeakyStack abstraction, using a circular array
+# with appropriate storage capacity. This class should have a public interface similar to the bounded-capacity stack
+# in Exercise C-6.16, but with the desired leaky semantics when full.
+# ####
+# Solution similar like in p-6.32
+
+class LeakyStack:
+    def __init__(self, limit_operations: int = 8, operation_array: List[Any] = None) -> None:
+        self._operations = operation_array or [None] * limit_operations
+        self._size = 0
+        self._index_of_next_operation = 0
+
+    def add_operation(self, operation: Any):
+        if not self._is_full():
+            self._size += 1
+
+        self._operations[self._index_of_next_operation] = operation
+        self._increase_next_operation_index()
+
+    def _increase_next_operation_index(self):
+        self._index_of_next_operation = (self._index_of_next_operation + 1) % len(self._operations)
+
+    def _is_full(self):
+        return self._size >= len(self._operations)
+
+    def get_last_operation(self) -> Any:
+        if self.is_empty():
+            raise EmptyCollection('Collection is empty')
+
+        self._decrease_next_operation_index()
+        last_operation = self._operations[self._index_of_next_operation]
+        self._operations[self._index_of_next_operation] = None
+        self._size -= 1
+
+        return last_operation
+
+    def _decrease_next_operation_index(self):
+        self._index_of_next_operation = (self._index_of_next_operation - 1) % len(self._operations)
+
+    def is_empty(self):
+        return self._size <= 0

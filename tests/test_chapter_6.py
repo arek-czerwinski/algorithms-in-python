@@ -14,7 +14,8 @@ from chapter_6.exercises import (
     ArrayStackWithInitialization,
     EmptyException, reverse_values_in_stack, is_matched_html, _get_tag_name,
     permute_with_stack, get_all_subsets, ArithmeticExpressionToPostfixExpression,
-    move_elements_stack_t_to_stack_s_with_original_sequence, SimpleQueueWithTwoStacks, has_element_in_stack, ArrayDeque)
+    move_elements_stack_t_to_stack_s_with_original_sequence, SimpleQueueWithTwoStacks, has_element_in_stack, ArrayDeque,
+    LeakyStack)
 from utils.errors import EmptyCollection
 
 
@@ -870,8 +871,7 @@ class TestArrayDeque:
         array_queue._index_after_last_element = index_after_last_element
         array_queue._size = size
         with pytest.raises(EmptyCollection):
-            array_queue._get_effective_last_element_index\
-                ()
+            array_queue._get_effective_last_element_index()
 
     @pytest.mark.parametrize(
         'index_after_last_element, size, initial_length, expected_result', [
@@ -990,3 +990,158 @@ class TestArrayDeque:
         array_queue._size = size
         actual_result = array_queue.last()
         assert actual_result == expected_result
+
+
+class TestLeakyStack:
+    DEFAULT_LIMIT_OPERATION = 8
+    OPERATION_VALUE = 'operation'
+
+    @pytest.mark.parametrize(
+        'limit_operation, operation_array, expected_result', [
+            (
+                    DEFAULT_LIMIT_OPERATION, list(), {
+                        '_operations': [None] * DEFAULT_LIMIT_OPERATION,
+                        '_size': 0,
+                        '_index_of_next_operation': 0,
+                    },
+            ),
+            (
+                    DEFAULT_LIMIT_OPERATION, [1], {
+                        '_operations': [1],
+                        '_size': 0,
+                        '_index_of_next_operation': 0,
+                    },
+            ),
+            (
+                    DEFAULT_LIMIT_OPERATION, [1, 2], {
+                        '_operations': [1, 2],
+                        '_size': 0,
+                        '_index_of_next_operation': 0,
+                    },
+            )
+        ]
+    )
+    def test___init__(self, limit_operation, operation_array, expected_result):
+        stack = LeakyStack(limit_operations=limit_operation, operation_array=operation_array)
+        actual_result = stack.__dict__
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
+        'operation, array_operation, size, index_of_next_operation, expected_result', [
+            (
+                    OPERATION_VALUE,
+                    [None, None, None],
+                    0,
+                    0, {
+                        '_operations': [OPERATION_VALUE, None, None],
+                        '_size': 1,
+                        '_index_of_next_operation': 1,
+                    },
+            ),
+            (
+
+                    OPERATION_VALUE,
+                    [1, None, None],
+                    1,
+                    1, {
+                        '_operations': [1, OPERATION_VALUE, None],
+                        '_size': 2,
+                        '_index_of_next_operation': 2,
+                    },
+            ),
+            (
+                    OPERATION_VALUE,
+                    [1, 2, None],
+                    2,
+                    2, {
+                        '_operations': [1, 2, OPERATION_VALUE],
+                        '_size': 3,
+                        '_index_of_next_operation': 0,
+                    },
+            ),
+            (
+                    OPERATION_VALUE,
+                    [1, 2, 3],
+                    3,
+                    0, {
+                        '_operations': [OPERATION_VALUE, 2, 3],
+                        '_size': 3,
+                        '_index_of_next_operation': 1,
+                    },
+            )
+        ]
+    )
+    def test_add_operation(self, operation, array_operation, size, index_of_next_operation, expected_result):
+        stack = LeakyStack(operation_array=array_operation)
+        stack._size = size
+        stack._index_of_next_operation = index_of_next_operation
+
+        stack.add_operation(operation)
+        actual_result = stack.__dict__
+        assert actual_result == expected_result
+
+    def test_get_last_operation__raise_exception_when_empty(self):
+        stack = LeakyStack()
+        with pytest.raises(EmptyCollection):
+            stack.get_last_operation()
+
+    @pytest.mark.parametrize(
+        'array_operation, size, index_of_next_operation, expected_state, expected_result', [
+            (
+                    [1, None, None],
+                    1,
+                    1, {
+                        '_operations': [None, None, None],
+                        '_size': 0,
+                        '_index_of_next_operation': 0,
+                    },
+                    1
+            ),
+            (
+                    [1, 2, None],
+                    2,
+                    2, {
+                        '_operations': [1, None, None],
+                        '_size': 1,
+                        '_index_of_next_operation': 1,
+                    },
+                    2,
+            ),
+            (
+                    [1, 2, 3],
+                    3,
+                    0, {
+                        '_operations': [1, 2, None],
+                        '_size': 2,
+                        '_index_of_next_operation': 2,
+                    },
+                    3
+            ),
+            (
+                    [OPERATION_VALUE, 2, 3],
+                    3,
+                    1, {
+                        '_operations': [None, 2, 3],
+                        '_size': 2,
+                        '_index_of_next_operation': 0,
+                    },
+                    OPERATION_VALUE,
+            )
+        ]
+    )
+    def test_get_last_operation(
+            self,
+            array_operation,
+            size,
+            index_of_next_operation,
+            expected_state,
+            expected_result,
+    ):
+        stack = LeakyStack(operation_array=array_operation)
+        stack._size = size
+        stack._index_of_next_operation = index_of_next_operation
+
+        actual_result = stack.get_last_operation()
+        actual_state = stack.__dict__
+        assert actual_result == expected_result
+        assert actual_state == expected_state
