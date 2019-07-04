@@ -344,7 +344,7 @@ def is_matched_html(raw):
         if k == -1:
             return False  # invalid tag
         # tag = raw[j+1:k]              # strip away < >
-        tag = _get_tag_name(raw_tag=raw[j + 1: k])
+        tag = get_tag_name(raw_tag=raw[j + 1: k])
         if not tag:
             return False
         if not tag.startswith('/'):  # this is opening tag
@@ -358,7 +358,7 @@ def is_matched_html(raw):
     return stack.is_empty()  # were all opening tags matched?
 
 
-def _get_tag_name(raw_tag: str):
+def get_tag_name(raw_tag: str):
     raw_tags = [
         part_of_raw_tag
         for part_of_raw_tag in raw_tag.split(sep=' ')
@@ -1101,3 +1101,63 @@ class LeakyStack:
 
     def is_empty(self):
         return self._size <= 0
+
+
+def add(a, b):
+    return a + b
+
+
+def minus(a, b):
+    return a - b
+
+
+def multiply(a, b):
+    return a * b
+
+
+def devide(a, b):
+    return a / b
+
+
+class PostfixNotationCalculator:
+    OPERATOR_TO_FUNCTION = {
+        '+': add,
+        '-': minus,
+        '*': multiply,
+        '/': devide,
+    }
+
+    def __init__(self, postfix_notation_expression: List[str]) -> None:
+        self._operators, self._operands = self._parse_expression(
+            expression=postfix_notation_expression,
+        )
+
+    # Other option is to use only one stock to operands and if in expression we have operator then we calculate result
+    # and push on stack of operands
+    @staticmethod
+    def _parse_expression(expression: List[str]):
+        operators = list()
+        operands = list()
+        for element in expression:
+            if element.isnumeric():
+                operands.append(float(element))
+            else:
+                operators.append(element)
+        operators.reverse()
+        operands.reverse()
+        return operators, operands
+
+    def calculate(self):
+        while self._operators:
+            operator = self._operators.pop()
+            a = self._operands.pop()
+            b = self._operands.pop()
+            function = self.OPERATOR_TO_FUNCTION[operator]
+            result = function(a, b)
+            self._operands.append(result)
+
+        if len(self._operands) != 1:
+            raise ValueError('Passed expression is incorrect')
+
+        return self._operands[0]
+

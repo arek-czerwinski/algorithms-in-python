@@ -12,10 +12,20 @@ from chapter_6.exercises import (
     ArrayStackWithMaxLen,
     FullException,
     ArrayStackWithInitialization,
-    EmptyException, reverse_values_in_stack, is_matched_html, _get_tag_name,
-    permute_with_stack, get_all_subsets, ArithmeticExpressionToPostfixExpression,
-    move_elements_stack_t_to_stack_s_with_original_sequence, SimpleQueueWithTwoStacks, has_element_in_stack, ArrayDeque,
-    LeakyStack)
+    EmptyException,
+    reverse_values_in_stack,
+    is_matched_html,
+    get_tag_name,
+    permute_with_stack,
+    get_all_subsets,
+    ArithmeticExpressionToPostfixExpression,
+    move_elements_stack_t_to_stack_s_with_original_sequence,
+    SimpleQueueWithTwoStacks,
+    has_element_in_stack,
+    ArrayDeque,
+    LeakyStack,
+    PostfixNotationCalculator,
+)
 from utils.errors import EmptyCollection
 
 
@@ -509,7 +519,7 @@ class TestIsMatchedHtmlFunction:
                 ]
     )
     def test__get_tag_name(self, raw_tag: str, expected_result):
-        tag = _get_tag_name(raw_tag=raw_tag)
+        tag = get_tag_name(raw_tag=raw_tag)
         assert tag == expected_result
 
 
@@ -1145,3 +1155,15 @@ class TestLeakyStack:
         actual_state = stack.__dict__
         assert actual_result == expected_result
         assert actual_state == expected_state
+
+
+class TestPostfixNotationCalculator:
+    @pytest.mark.parametrize(
+        'expression, expected_result', [
+            (['2', '5', '+'], 7.0),
+            (['2', '3', '*', '7', '+'], 13.0)
+        ]
+    )
+    def test_calculate(self, expression: List[str], expected_result):
+        actual_result = PostfixNotationCalculator(expression).calculate()
+        assert actual_result == expected_result
