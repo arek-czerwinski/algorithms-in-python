@@ -181,8 +181,9 @@ class MyDoubledLinkedNode:
             next_node: Optional['MyDoubledLinkedNode'] = None,
     ) -> None:
         self.value = value
-        self.previous_node = previous_node,
-        self._next_node = next_node
+        self.previous_node = previous_node
+
+        self.next_node = next_node
 
 
 class MyDoubleLinkedList:
@@ -204,22 +205,85 @@ class MyDoubleLinkedList:
 
     @property
     def first(self):
+        self._raise_if_empty()
+        return self._head.value
+
+    def _raise_if_empty(self):
         if self.is_empty():
             raise EmptyCollection()
-        return self._head.value
 
     @property
     def last(self):
-        pass
+        self._raise_if_empty()
+        return self._tail.value
 
     def insert_first(self, value: Any):
-        pass
+        if self.is_empty():
+            node = MyDoubledLinkedNode(value=value)
+            self._tail = node
+            self._head = node
+        else:
+            node = MyDoubledLinkedNode(value=value, next_node=self._head)
+            self._head.previous_node = node
+            self._head = node
+
+        self._size += 1
 
     def insert_last(self, value: Any):
-        pass
+        if self.is_empty():
+            node = MyDoubledLinkedNode(value=value)
+            self._tail = node
+            self._head = node
+        else:
+            node = MyDoubledLinkedNode(value=value, previous_node=self._tail)
+            self._tail.next_node = node
+            self._tail = node
+
+        self._size += 1
 
     def delete_fist(self) -> Any:
-        pass
+        self._raise_if_empty()
+        value = self._head.value
+
+        if len(self) == 1:
+            self._tail = None
+        self._head = self._head.next_node
+        if self._head:
+            self._head.previous_node = None
+
+        self._size -= 1
+
+        return value
 
     def delete_last(self) -> Any:
-        pass
+        self._raise_if_empty()
+        value = self._tail.value
+
+        if len(self) == 1:
+            self._head = None
+        self._tail = self._tail.previous_node
+        if self._tail:
+            self._tail.next_node = None
+
+        return value
+
+    # TODO: to follow DRY rule use iterator pattern
+    @property
+    def all_values_from_head(self):
+        current_node = self._head
+        all_values = list()
+        while current_node:
+            all_values.append(current_node.value)
+            current_node = current_node.next_node
+
+        return all_values
+
+    @property
+    def all_values_from_tail(self):
+        current_node = self._tail
+        all_values = list()
+        while current_node:
+            all_values.append(current_node.value)
+            current_node = current_node.previous_node
+
+        return all_values

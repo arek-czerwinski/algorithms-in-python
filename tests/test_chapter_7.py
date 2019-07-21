@@ -1,6 +1,7 @@
 import pytest
 
-from chapter_7.exercises import MySingleNode, MySingleLinkedList, get_number_of_nodes, MyDoubleLinkedList
+from chapter_7.exercises import MySingleNode, MySingleLinkedList, get_number_of_nodes, MyDoubleLinkedList, \
+    MyDoubledLinkedNode
 
 from utils.errors import EmptyCollection, ValueNotFoundError
 
@@ -374,6 +375,19 @@ class TestGetNumberOfNodesFunction:
 
 class TestMyDoubleLinkedList:
     @pytest.mark.parametrize(
+        'new_size, expected_result',
+        [
+            (0, True),
+            (1, False),
+        ]
+    )
+    def test_is_empty(self, new_size, expected_result):
+        instance = MyDoubleLinkedList()
+        instance._size = new_size
+        actual_result = instance.is_empty()
+        assert actual_result == expected_result
+
+    @pytest.mark.parametrize(
         'instance',
         [
             MyDoubleLinkedList()
@@ -386,10 +400,205 @@ class TestMyDoubleLinkedList:
             first_element = instance.first
 
     @pytest.mark.parametrize(
-        'instance, expected_result',
+        'values_to_add, expected_value, all_values_from_head, all_values_from_tail',
         [
-            (MyDoubleLinkedList(), None),
+            (
+                    [1],
+                    1,
+                    [1],
+                    [1],
+            ),
         ]
     )
-    def test_first(self, instance, expected_result):
-        pass
+    def test_first(self, values_to_add, expected_value, all_values_from_head, all_values_from_tail):
+        instance = MyDoubleLinkedList()
+        for value in values_to_add:
+            instance.insert_first(value)
+        actual_result = instance.first
+        assert actual_result == expected_value
+        assert all_values_from_head == instance.all_values_from_head
+        assert all_values_from_tail == instance.all_values_from_tail
+
+    @pytest.mark.parametrize(
+        'instance',
+        [
+            MyDoubleLinkedList()
+        ]
+    )
+    def test_last__negative_scenario_empty_collection(
+            self, instance,
+    ):
+        with pytest.raises(EmptyCollection):
+            first_element = instance.last
+
+    @pytest.mark.parametrize(
+        'values_to_add, expected_value, all_values_from_head, all_values_from_tail',
+        [
+            (
+                    [1],
+                    1,
+                    [1],
+                    [1],
+            ),
+        ]
+    )
+    def test_last(self, values_to_add, expected_value, all_values_from_head, all_values_from_tail):
+        instance = MyDoubleLinkedList()
+        for value in values_to_add:
+            instance.insert_first(value)
+
+        actual_result = instance.last
+        assert actual_result == expected_value
+        assert all_values_from_head == instance.all_values_from_head
+        assert all_values_from_tail == instance.all_values_from_tail
+
+    @pytest.mark.parametrize(
+        'values_to_add, all_values_from_head, all_values_from_tail',
+        [
+            (
+                    [1],
+                    [1],
+                    [1],
+            ),
+            (
+                    [1, 2],
+                    [2, 1],
+                    [1, 2]
+            ),
+            (
+                    [1, 2, 3],
+                    [3, 2, 1],
+                    [1, 2, 3],
+            ),
+
+
+            #
+
+        ]
+    )
+    def test_insert_fist(self, values_to_add, all_values_from_head, all_values_from_tail):
+        instance = MyDoubleLinkedList()
+        for value in values_to_add:
+            instance.insert_first(value)
+
+        assert all_values_from_head == instance.all_values_from_head
+        assert all_values_from_tail == instance.all_values_from_tail
+
+    @pytest.mark.parametrize(
+        'values_to_add, all_values_from_head, all_values_from_tail',
+        [
+            (
+                    [1],
+                    [1],
+                    [1],
+            ),
+            (
+                    [1, 2],
+                    [1, 2],
+                    [2, 1]
+            ),
+            (
+                    [1, 2, 3],
+                    [1, 2, 3],
+                    [3, 2, 1],
+            ),
+        ]
+    )
+    def test_insert_last(self, values_to_add, all_values_from_head, all_values_from_tail):
+        instance = MyDoubleLinkedList()
+        for value in values_to_add:
+            instance.insert_last(value)
+
+        assert all_values_from_head == instance.all_values_from_head
+        assert all_values_from_tail == instance.all_values_from_tail
+
+    @pytest.mark.parametrize(
+        'instance',
+        [
+            MyDoubleLinkedList()
+        ]
+    )
+    def test_delete_first__negative_scenario_empty_collection(
+            self, instance,
+    ):
+        with pytest.raises(EmptyCollection):
+            first_element = instance.delete_fist()
+
+    @pytest.mark.parametrize(
+        'values_to_add, expected_deleted_value, all_values_from_head, all_values_from_tail',
+        [
+            (
+                    [1],
+                    1,
+                    [],
+                    [],
+            ),
+            (
+                    [1, 2],
+                    2,
+                    [1],
+                    [1]
+            ),
+            (
+                    [1, 2, 3],
+                    3,
+                    [2, 1],
+                    [1, 2
+                     ],
+            ),
+        ]
+    )
+    def test_delete_first(self, values_to_add, expected_deleted_value, all_values_from_head, all_values_from_tail):
+        instance = MyDoubleLinkedList()
+        for value in values_to_add:
+            instance.insert_first(value)
+
+        deleted_value = instance.delete_fist()
+        assert deleted_value == expected_deleted_value
+        assert all_values_from_head == instance.all_values_from_head
+        assert all_values_from_tail == instance.all_values_from_tail
+
+    @pytest.mark.parametrize(
+        'instance',
+        [
+            MyDoubleLinkedList()
+        ]
+    )
+    def test_delete_last__negative_scenario_empty_collection(
+            self, instance,
+    ):
+        with pytest.raises(EmptyCollection):
+            first_element = instance.delete_last()
+
+    @pytest.mark.parametrize(
+        'values_to_add, expected_deleted_value, all_values_from_head, all_values_from_tail',
+        [
+            (
+                    [1],
+                    1,
+                    [],
+                    [],
+            ),
+            (
+                    [1, 2],
+                    1,
+                    [2],
+                    [2]
+            ),
+            (
+                    [1, 2, 3],
+                    1,
+                    [3, 2],
+                    [2, 3],
+            ),
+        ]
+    )
+    def test_delete_last(self, values_to_add, expected_deleted_value, all_values_from_head, all_values_from_tail):
+        instance = MyDoubleLinkedList()
+        for value in values_to_add:
+            instance.insert_first(value)
+
+        deleted_value = instance.delete_last()
+        assert deleted_value == expected_deleted_value
+        assert all_values_from_head == instance.all_values_from_head
+        assert all_values_from_tail == instance.all_values_from_tail
