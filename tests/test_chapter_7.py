@@ -1,7 +1,8 @@
 import pytest
 
-from chapter_7.exercises import MySingleNode, MySingleLinkedList, get_number_of_nodes
-from utils.errors import EmptyCollection
+from chapter_7.exercises import MySingleNode, MySingleLinkedList, get_number_of_nodes, MyDoubleLinkedList
+
+from utils.errors import EmptyCollection, ValueNotFoundError
 
 
 class TestMySingleNode:
@@ -9,11 +10,11 @@ class TestMySingleNode:
         'next_node, value, expected_value', [
             (None, 'some_value', {'next_node': None, 'value': 'some_value'}),
             (
-                MySingleNode(None, 'another_value'), 'some_value', {
-                    'next_node': MySingleNode(None, 'another_value').to_dict()
-                    ,
-                    'value': 'some_value',
-                }
+                    MySingleNode(None, 'another_value'), 'some_value', {
+                        'next_node': MySingleNode(None, 'another_value').to_dict()
+                        ,
+                        'value': 'some_value',
+                    }
             ),
         ]
     )
@@ -39,7 +40,7 @@ class TestMySingleLinkedList:
     @pytest.mark.parametrize(
         'values_to_add, expected_state',
         [
-            (list(),  {'_head': None, '_tail': None, '_size': 0}),
+            (list(), {'_head': None, '_tail': None, '_size': 0}),
             (
                     [1],
                     {
@@ -261,9 +262,100 @@ class TestMySingleLinkedList:
     )
     def test_extend(self, current_instance, other_instance, expected_state):
         result = current_instance.extend(other_instance)
-        print('******', result.get_all_values())
         actual_state = result.to_dict()
         assert actual_state == expected_state
+
+    @pytest.mark.parametrize(
+        'values_to_add, value_1_to_swap, value_2_to_swap, expected_state',
+        [
+            (
+                    [1],
+                    1,
+                    1,
+                    MySingleLinkedList(
+                        head=MySingleNode(None, 1),
+                        tail=MySingleNode(None, 1),
+                        size=1,
+                    ).to_dict()
+            ),
+            (
+
+                    [1, 2],
+                    1,
+                    2,
+                    MySingleLinkedList(
+                        head=MySingleNode(MySingleNode(None, 1), 2),
+                        tail=MySingleNode(None, 1),
+                        size=2,
+                    ).to_dict()
+            ),
+            (
+                    [1, 2],
+                    2,
+                    1,
+                    MySingleLinkedList(
+                        head=MySingleNode(MySingleNode(None, 1), 2),
+                        tail=MySingleNode(None, 1),
+                        size=2,
+                    ).to_dict()
+            ),
+            (
+                    [1, 2, 3, 4],
+                    2,
+                    3,
+                    MySingleLinkedList(
+                        head=MySingleNode(MySingleNode(MySingleNode(MySingleNode(None, 4), 2), 3), 1),
+                        tail=MySingleNode(None, 4),
+                        size=4,
+                    ).to_dict()
+            ),
+        ]
+    )
+    def test_swap(self, values_to_add, value_1_to_swap, value_2_to_swap, expected_state):
+        instance = MySingleLinkedList()
+        for value in values_to_add:
+            instance.add_element_at_tail(value=value)
+        instance.swap_values(value_1=value_1_to_swap, value_2=value_2_to_swap)
+        actual_state = instance.to_dict()
+        assert actual_state == expected_state
+
+    @pytest.mark.parametrize(
+        'instance',
+        [
+            (MySingleLinkedList())
+        ]
+    )
+    def test_swap__negative_scenario_empty_collection(self, instance):
+        with pytest.raises(EmptyCollection):
+            instance.swap_values(value_1=1, value_2=2)
+
+    @pytest.mark.parametrize(
+        'values_to_add, value_1_to_swap, value_2_to_swap, ',
+        [
+            (
+                    [1, 2, 3],
+                    -1,
+                    1,
+            ),
+            (
+                    [1, 2, 3],
+                    2,
+                    -1,
+            ),
+        ]
+    )
+    def test_swap_negative_scenario_values_not_found(
+            self,
+            values_to_add,
+            value_1_to_swap,
+            value_2_to_swap,
+    ):
+        instance = MySingleLinkedList()
+        for value in values_to_add:
+            instance.add_element_at_tail(value=value)
+
+        with pytest.raises(ValueNotFoundError):
+            instance.swap_values(value_1=value_1_to_swap, value_2=value_2_to_swap)
 
 
 class TestGetNumberOfNodesFunction:
@@ -278,3 +370,26 @@ class TestGetNumberOfNodesFunction:
     def test_get_number_of_nodes(self, head, expected_result):
         actual_result = get_number_of_nodes(head=head)
         assert actual_result == expected_result
+
+
+class TestMyDoubleLinkedList:
+    @pytest.mark.parametrize(
+        'instance',
+        [
+            MyDoubleLinkedList()
+        ]
+    )
+    def test_first__negative_scenario_empty_collection(
+            self, instance,
+    ):
+        with pytest.raises(EmptyCollection):
+            first_element = instance.first
+
+    @pytest.mark.parametrize(
+        'instance, expected_result',
+        [
+            (MyDoubleLinkedList(), None),
+        ]
+    )
+    def test_first(self, instance, expected_result):
+        pass

@@ -4,3 +4,7 @@ class EmptyCollection(Exception):
 
 class FullCollection(Exception):
     pass
+
+
+class ValueNotFoundError(Exception):
+    pass
