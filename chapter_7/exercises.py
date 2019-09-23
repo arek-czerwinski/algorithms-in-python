@@ -1,4 +1,4 @@
-from typing import Optional, Any, Union, Dict
+from typing import Optional, Any, Union, Dict, Callable
 
 from utils.errors import EmptyCollection, ValueNotFoundError
 
@@ -162,6 +162,29 @@ class MySingleLinkedList(ToDictMixin):
             raise ValueNotFoundError(f'Value {value} not found in {self.get_all_values()}')
         return previous, current_node
 
+    # R-7.7 Our CircularQueue class of Section 7.2.2 provides a rotate()
+    # method that has semantics equivalent to Q.enqueue(Q.dequeue()),
+    # for a nonempty queue.
+    # Implement such a method for the LinkedQueue class of Sec- tion 7.1.2 without the creation of any new nodes.
+    def rotate(self):
+        if len(self) > 1:
+            before_old_tail = self._find_node_before_tail()
+            old_tail = self._tail
+
+            before_old_tail.next_node = None
+            self._tail = before_old_tail
+
+            old_tail.next_node = self._head
+            self._head = old_tail
+
+    def _find_node_before_tail(self):
+        if len(self) > 1:
+            next_node = self._head
+            while next_node is not self._tail:
+                next_node = next_node.next_node
+            return next_node
+        return None
+
 
 # R-7.3 Describe a recursive algorithm that counts the number of nodes in a singly linked list.
 def get_number_of_nodes(head: Optional[MySingleNode] = None):
@@ -287,3 +310,120 @@ class MyDoubleLinkedList:
             current_node = current_node.previous_node
 
         return all_values
+
+    # R-7.8 Describe a nonrecursive method for finding, by link hopping,
+    # the middle node of a doubly linked list with header and trailer sentinels.
+    # \In the case of an even number of nodes, report the node slightly left of center as the “middle.”
+    # (Note: This method must only use link hopping; it cannot use a counter.)
+    # What is the running time of this method?
+    def find_middle_value(self):
+        slow_pointer = self._head
+        fast_pointer = self._head
+        while fast_pointer is not None and fast_pointer.next_node is not None:
+            slow_pointer = slow_pointer.next_node
+            fast_pointer = fast_pointer.next_node.next_node
+
+        return slow_pointer.value
+
+
+# my not the best implementation. The current should point the last element so
+# there is no need to iterate to last element to add new one.
+# if we have the lest element so in the same time we can get first element
+class MyCircularList:
+    def __init__(self):
+        self._current: Optional[MySingleNode] = None
+
+    # R-7.5 Implement a function that counts the number of nodes in a circularly linked list
+    def __len__(self):
+        return len(self.get_items())
+
+    def is_empty(self):
+        return len(self) == 0
+
+    def add(self, item: Any):
+        if self._current:
+            next_element = self._current.next_node
+            new_node = MySingleNode(next_node=next_element, value=item)
+            self._current.next_node = new_node
+        else:
+            new_node = MySingleNode(next_node=None, value=item)
+            new_node.next_node = new_node
+            self._current = new_node
+
+    def get_items(self):
+        elements = list()
+        if self._current:
+            next_item = self._current.next_node
+            next_item_value = next_item.value
+            while self._current is not next_item:
+                elements.append(next_item_value)
+
+                next_item = next_item.next_node
+                next_item_value = next_item.value
+
+            elements.append(next_item_value)
+
+        return elements
+
+
+class CircularQueue:
+    class _Node:
+        def __init__(self, element, next):
+            self._element = element
+            self._next = next
+
+    def __init__(self):
+        self._tail = None
+        self._size = 0
+
+    def __len__(self):
+        return self._size
+
+    def is_empty(self):
+        return self._size == 0
+
+    def first(self):
+        if self.is_empty():
+            raise EmptyCollection('Queue is empty')
+        head = self._tail._next
+        return head._element
+
+    def dequeue(self):
+        if self.is_empty():
+            raise EmptyCollection('Queue is empty')
+        oldhead = self._tail._next
+        if self._size == 1:
+            self._tail = None
+        else:
+            self._tail._next = oldhead._next
+        self._size -= 1
+        return oldhead._element
+
+    def enqueue(self, e):
+        newest = self._Node(e, None)
+        if self.is_empty():
+            newest._next = newest
+        else:
+            newest._next = self._tail._next
+            self._tail._next = newest
+        self._tail = newest
+        self._size += 1
+
+    def rotate(self):
+        if self._size > 0:
+            self._tail = self._tail._next
+
+    # R-7.6 Suppose that x and y are references to nodes of circularly linked lists,
+    # although not necessarily the same list.
+    # Describe a fast algorithm for telling if x and y belong to the same list.
+    def _is_node_belong(self, node: _Node):
+        is_belong = False
+        if not self.is_empty():
+            is_belong = node is self._tail
+            next_node = self._tail.next_node
+            while not is_belong and next_node is not self._tail:
+                is_belong = next_node is node
+                next_node = next_node.next_node
+
+        return is_belong
+

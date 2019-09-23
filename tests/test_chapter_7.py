@@ -1,7 +1,9 @@
+from typing import List, Any
+
 import pytest
 
 from chapter_7.exercises import MySingleNode, MySingleLinkedList, get_number_of_nodes, MyDoubleLinkedList, \
-    MyDoubledLinkedNode
+    MyDoubledLinkedNode, MyCircularList
 
 from utils.errors import EmptyCollection, ValueNotFoundError
 
@@ -602,3 +604,26 @@ class TestMyDoubleLinkedList:
         assert deleted_value == expected_deleted_value
         assert all_values_from_head == instance.all_values_from_head
         assert all_values_from_tail == instance.all_values_from_tail
+
+
+class TestCircularList:
+    def test___init__(self):
+        circular_list = MyCircularList()
+        assert circular_list._current is None
+
+    @pytest.mark.parametrize(
+        'elements_to_add, expected_result',
+        [
+            (list(), list()),
+            ([1, 3], [3, 1]),
+            ([1, 2, 3], [3, 2, 1]),
+            ([1, 2, 3, 4], [3, 2, 1]),
+        ]
+    )
+    def test_add(self, elements_to_add: List[Any], expected_result: List[Any]):
+        circular_list = MyCircularList()
+        for element in elements_to_add:
+            circular_list.add(element)
+
+        actual_result = circular_list.get_items()
+        assert actual_result == expected_result
