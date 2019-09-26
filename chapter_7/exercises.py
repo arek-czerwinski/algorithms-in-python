@@ -1,4 +1,4 @@
-from typing import Optional, Any, Union, Dict, Callable
+from typing import Optional, Any, Union, Dict, Callable, Iterable
 
 from utils.errors import EmptyCollection, ValueNotFoundError
 
@@ -325,6 +325,37 @@ class MyDoubleLinkedList:
 
         return slow_pointer.value
 
+    @classmethod
+    def from_iterable(cls, list_elements: Iterable) -> 'MyDoubleLinkedList':
+        my_list = MyDoubleLinkedList()
+        for element in list_elements:
+            my_list.insert_last(element)
+
+        return my_list
+
+    # R-7.9 Give a fast algorithm for concatenating two doubly linked lists L and M,
+    # with header and trailer sentinel nodes, into a single  list L.
+    def concatenate(self, other: 'MyDoubleLinkedList'):
+        updated_list = self._get_not_empty_list_if_exists(other)
+
+        if not self.is_empty() and other and not other.is_empty():
+            self._tail.next_node = other._head
+            other._head.previous_node = self._tail
+
+            updated_list = MyDoubleLinkedList(
+                head=self._head,
+                tail=other._tail,
+                size=self._size + other._size,
+            )
+
+        return updated_list
+
+    def _get_not_empty_list_if_exists(self, other):
+        updated_list = self
+        if updated_list.is_empty() and other and not other.is_empty():
+            updated_list = other
+        return updated_list
+
 
 # my not the best implementation. The current should point the last element so
 # there is no need to iterate to last element to add new one.
@@ -426,4 +457,182 @@ class CircularQueue:
                 next_node = next_node.next_node
 
         return is_belong
+
+
+# R-7.10 There seems to be some redundancy in the repertoire of the positional list ADT, as the operation
+# L.add first(e) could be enacted by the alter- native L.add before(L.first(), e). Likewise, L.add last(e)
+# might be performed as L.add after(L.last(), e). Explain why the methods add first and add last are necessary.
+# In my opinion, add first and last are needed because with adding position as parameter
+# will cause that it will be required
+# iterating over all nodes to find specific value.
+# Those operation are redundant in case where we already have information about first and last element.
+
+class _DoublyLinkedBase:
+    # nested _Node class
+    class _Node:
+        __slots__ = '_element', '_prev', '_next'
+
+        def __init__(self, element, prev, next):
+            self._element = element
+            self._prev = prev
+            self._next = next
+
+    def __init__(self):
+        self._header = self._Node(None, None, None)
+        self._trailer = self._Node(None, None, None)
+        self._header._next = self._trailer
+        self._trailer._prev = self._header
+        self._size = 0
+
+    def __len__(self):
+        return self._size
+
+    def is_empty(self):
+        return self._size == 0
+
+    def _insert_between(self, e, predecessor, successor):
+        newest = self._Node(e, predecessor, successor)
+        predecessor._next = newest
+        successor._prev = newest
+        self._size += 1
+        return newest
+
+    def _delete_node(self, node):
+        predecessor = node._prev
+        successor = node._next
+        predecessor._next = successor
+        successor._prev = predecessor
+        self._size -= 1
+        element = node._element
+        node._prev = node._next = node._element = None
+        return element
+
+
+class PositionalList(_DoublyLinkedBase):
+    class Position:
+        def __init__(self, container, node):
+            self._container = container
+            self._node = node
+
+        def element(self):
+            return self._node._element
+
+        def __eq__(self, other):
+            return type(other) is type(self) and other._node is self._node
+
+        def __ne__(self, other):
+            return not (self == other)
+
+    def _validate(self, p):
+        if not isinstance(p, self.Position):
+            raise TypeError('p must be proper Position type')
+        if p._container is not self:
+            raise ValueError('p does not belong to this container')
+        if p._node._next is None:  # convention for deprecated nodes
+            raise ValueError('p is no longer valid')
+        return p._node
+
+    def _make_position(self, node):
+        if node is self._header or node is self._trailer:
+            return None
+        else:
+            return self.Position(self, node)
+
+    def first(self):
+        return self._make_position(self._header._next)
+
+    def last(self):
+        return self._make_position(self._trailer._prev)
+
+    def before(self, p):
+        node = self._validate(p)
+        return self._make_position(node._prev)
+
+    def after(self, p):
+        node = self._validate(p)
+        return self._make_position(node._next)
+
+    def __iter__(self):
+        cursor = self.first()
+        while cursor is not None:
+            yield cursor.element()
+            cursor = self.after(cursor)
+
+    def _insert_between(self, e, predecessor, successor):
+        node = super()._insert_between(e, predecessor, successor)
+        return self._make_position(node)
+
+    def add_first(self, e):
+        return self._insert_between(e, self._header, self._header._next)
+
+    def add_last(self, e):
+        return self._insert_between(e, self._trailer._prev, self._trailer)
+
+    def add_before(self, p, e):
+        original = self._validate(p)
+        return self._insert_between(e, original._prev, original)
+
+    def add_after(self, p, e):
+        original = self._validate(p)
+        return self._insert_between(e, original, original._next)
+
+    def delete(self, p):
+        original = self._validate(p)
+        return self._delete_node(original)
+
+    def replace(self, p, e):
+        original = self._validate(p)
+        old_value = original._element
+        original._element = e
+        return old_value
+
+    # R-7.13 Update the PositionalList class to support an additional method find(e),
+    # which returns the position of the (first occurrence of ) element e in the list (or None if not found).
+    def find(self, e):
+        cursor = self.first()
+        while cursor is not None:
+            if cursor.element() == e:
+                return cursor
+
+        return None
+
+    # R-7.14 Repeat the previous process using recursion. \
+    # Your method should not contain any loops. How much space does your method use in addition to the space used for L?
+    def find_recursively(self, e):
+        def _find(e, cursor):
+            if cursor is not None:
+                if cursor.element() == e:
+                    return cursor
+                else:
+                    _find(e, self.after(cursor))
+            return cursor
+
+        return _find(e, self.first())
+
+    # R-7.15 Providesupportfora     reversed     method of the PositionalList class that is similar
+    # to the given     iter     , but that iterates the elements in reversed order.
+    def __reversed__(self):
+        cursor = self.last()
+        while cursor is not None:
+            yield cursor.element()
+            cursor = self.before(cursor)
+
+
+# R-7.11 Implement a function, with calling syntax max(L), that returns the maximum element from a PositionalList
+# instance L containing comparable elements.
+# The same case is with task R-7.12. Instead of passing positional list
+# as a parameter we have self with all needed information
+# R-7.12 Redo the previously problem with max as a method of the PositionalList class, so that calling syntax L.max()
+# is supported.
+def max_element(positional_list: PositionalList):
+    if positional_list.is_empty():
+        return None
+    iterator = iter(positional_list)
+    max_value = next(iterator)
+    for value in iterator:
+        if max_value < value:
+            max_value = value
+
+    return max_value
+
 

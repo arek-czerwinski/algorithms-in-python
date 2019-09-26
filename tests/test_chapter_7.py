@@ -605,6 +605,32 @@ class TestMyDoubleLinkedList:
         assert all_values_from_head == instance.all_values_from_head
         assert all_values_from_tail == instance.all_values_from_tail
 
+    @pytest.mark.parametrize(
+        'list_a, list_b, expected_all_values_from_head, expected_all_values_from_tail, expected_size',
+        [
+            (MyDoubleLinkedList.from_iterable(list()), None, list(), list(), 0),
+            (MyDoubleLinkedList.from_iterable(list()), MyDoubleLinkedList.from_iterable(list()), list(), list(), 0),
+            (MyDoubleLinkedList.from_iterable([1]), MyDoubleLinkedList.from_iterable(list()), [1], [1], 1),
+            (MyDoubleLinkedList.from_iterable(list()), MyDoubleLinkedList.from_iterable([1]), [1], [1], 1),
+            (MyDoubleLinkedList.from_iterable([2]), MyDoubleLinkedList.from_iterable([1]), [2, 1], [1, 2], 2),
+        ]
+    )
+    def test_concatenate(
+            self,
+            list_a: MyDoubleLinkedList,
+            list_b: MyDoubleLinkedList,
+            expected_all_values_from_head,
+            expected_all_values_from_tail,
+            expected_size,
+    ):
+        updated_list = list_a.concatenate(list_b)
+        actual_all_values_from_head = updated_list.all_values_from_head
+        actual_all_values_from_tail = updated_list.all_values_from_tail
+        actual_size = updated_list._size
+        assert actual_all_values_from_head == expected_all_values_from_head
+        assert actual_all_values_from_tail == expected_all_values_from_tail
+        assert actual_size == expected_size
+
 
 class TestCircularList:
     def test___init__(self):
@@ -617,7 +643,7 @@ class TestCircularList:
             (list(), list()),
             ([1, 3], [3, 1]),
             ([1, 2, 3], [3, 2, 1]),
-            ([1, 2, 3, 4], [3, 2, 1]),
+            ([1, 2, 3, 4], [4, 3, 2, 1]),
         ]
     )
     def test_add(self, elements_to_add: List[Any], expected_result: List[Any]):
