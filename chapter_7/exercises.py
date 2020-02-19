@@ -615,7 +615,17 @@ class PositionalList(_DoublyLinkedBase):
         cursor = self.last()
         while cursor is not None:
             yield cursor.element()
-            cursor = self.before(cursor)
+
+    # R-7.16 Describe an implementation of the PositionalList methods add last and add before realized by using
+    # only methods in the set {is empty, first, last, prev, next, add after, and add first}
+    def add_before_new_implementation(self, p, e):
+        if not self.is_empty:
+            self.add_after(self.before(p), e)
+        else:
+            self.add_first(e)
+
+    def add_last_new_implementation(self, e):
+        self.add_after(self.before(self.last()), e)
 
 
 # R-7.11 Implement a function, with calling syntax max(L), that returns the maximum element from a PositionalList
