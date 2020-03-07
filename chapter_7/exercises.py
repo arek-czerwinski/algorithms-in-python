@@ -1,5 +1,9 @@
 from typing import Optional, Any, Union, Dict, Callable, Iterable
 
+from chapter_7.double_linked_base import _DoublyLinkedBase
+from chapter_7.favorites_list import FavoritesList
+from chapter_7.favorites_list_mtf import FavoritesListMTF
+from chapter_7.positional_list import PositionalList
 from utils.errors import EmptyCollection, ValueNotFoundError
 
 
@@ -467,125 +471,8 @@ class CircularQueue:
 # iterating over all nodes to find specific value.
 # Those operation are redundant in case where we already have information about first and last element.
 
-class _DoublyLinkedBase:
-    # nested _Node class
-    class _Node:
-        __slots__ = '_element', '_prev', '_next'
 
-        def __init__(self, element, prev, next):
-            self._element = element
-            self._prev = prev
-            self._next = next
-
-    def __init__(self):
-        self._header = self._Node(None, None, None)
-        self._trailer = self._Node(None, None, None)
-        self._header._next = self._trailer
-        self._trailer._prev = self._header
-        self._size = 0
-
-    def __len__(self):
-        return self._size
-
-    def is_empty(self):
-        return self._size == 0
-
-    def _insert_between(self, e, predecessor, successor):
-        newest = self._Node(e, predecessor, successor)
-        predecessor._next = newest
-        successor._prev = newest
-        self._size += 1
-        return newest
-
-    def _delete_node(self, node):
-        predecessor = node._prev
-        successor = node._next
-        predecessor._next = successor
-        successor._prev = predecessor
-        self._size -= 1
-        element = node._element
-        node._prev = node._next = node._element = None
-        return element
-
-
-class PositionalList(_DoublyLinkedBase):
-    class Position:
-        def __init__(self, container, node):
-            self._container = container
-            self._node = node
-
-        def element(self):
-            return self._node._element
-
-        def __eq__(self, other):
-            return type(other) is type(self) and other._node is self._node
-
-        def __ne__(self, other):
-            return not (self == other)
-
-    def _validate(self, p):
-        if not isinstance(p, self.Position):
-            raise TypeError('p must be proper Position type')
-        if p._container is not self:
-            raise ValueError('p does not belong to this container')
-        if p._node._next is None:  # convention for deprecated nodes
-            raise ValueError('p is no longer valid')
-        return p._node
-
-    def _make_position(self, node):
-        if node is self._header or node is self._trailer:
-            return None
-        else:
-            return self.Position(self, node)
-
-    def first(self):
-        return self._make_position(self._header._next)
-
-    def last(self):
-        return self._make_position(self._trailer._prev)
-
-    def before(self, p):
-        node = self._validate(p)
-        return self._make_position(node._prev)
-
-    def after(self, p):
-        node = self._validate(p)
-        return self._make_position(node._next)
-
-    def __iter__(self):
-        cursor = self.first()
-        while cursor is not None:
-            yield cursor.element()
-            cursor = self.after(cursor)
-
-    def _insert_between(self, e, predecessor, successor):
-        node = super()._insert_between(e, predecessor, successor)
-        return self._make_position(node)
-
-    def add_first(self, e):
-        return self._insert_between(e, self._header, self._header._next)
-
-    def add_last(self, e):
-        return self._insert_between(e, self._trailer._prev, self._trailer)
-
-    def add_before(self, p, e):
-        original = self._validate(p)
-        return self._insert_between(e, original._prev, original)
-
-    def add_after(self, p, e):
-        original = self._validate(p)
-        return self._insert_between(e, original, original._next)
-
-    def delete(self, p):
-        original = self._validate(p)
-        return self._delete_node(original)
-
-    def replace(self, p, e):
-        original = self._validate(p)
-        old_value = original._element
-        original._element = e
-        return old_value
-
+class MyPositionalList(PositionalList):
     # R-7.13 Update the PositionalList class to support an additional method find(e),
     # which returns the position of the (first occurrence of ) element e in the list (or None if not found).
     def find(self, e):
@@ -609,7 +496,7 @@ class PositionalList(_DoublyLinkedBase):
 
         return _find(e, self.first())
 
-    # R-7.15 Providesupportfora     reversed     method of the PositionalList class that is similar
+    # R-7.15 Provide support for a     reversed     method of the PositionalList class that is similar
     # to the given     iter     , but that iterates the elements in reversed order.
     def __reversed__(self):
         cursor = self.last()
@@ -626,6 +513,41 @@ class PositionalList(_DoublyLinkedBase):
 
     def add_last_new_implementation(self, e):
         self.add_after(self.before(self.last()), e)
+
+    # R-7.17  In the FavoritesListMTF class ,we rely on public methods of the positional list ADT to move an element of
+    # a list at position p to become the first element of the list, while keeping the relative order of the remaining
+    # elements unchanged.
+    # Internally, that combination of operations causes one node to be removed and a new node to be inserted.
+    # Augment the PositionalList class to support a new method, move_to_front(p),
+    # that accomplishes this goal more directly, by relinking the existing node.
+    def move_to_front(self, p):
+        if p:
+            node = p._node
+            previous = node._prev
+            next = node._next
+
+            previous._next = next
+            next._prev = previous
+            node._prev = None
+            node._next = self._data._header
+            self._data.header._prev = node
+
+    # R-7.18 Given the set of element {a,b,c,d,e,f} stored in a list, show the final state of the list,
+    # assuming we use the move-to-front heuristic and access the elements according to the
+    # following sequence: (a,b,c,d,e,f,a,c,f,b,d,e).
+    # init state [a, b ,c ,d ,e ,f]
+    # move a - [a, b ,c ,d ,e ,f]
+    # move b - [b, a, c ,d ,e ,f]
+    # move c - [c, b, a, d ,e ,f]
+    # move d - [d, c, b, a, e ,f]
+    # move e - [e, d, c, b, a, f]
+    # move f - [f, e, d, c, b, a]
+    # move a - [a, f, e, d, c, b]
+    # move c - [c, a, f, e, d, b]
+    # move f - [f, c, a, e, d, b]
+    # move b - [b, f, c, a, e, d]
+    # move d - [d, b, f, c, a, e]
+    # move e - [e, d, b, f, c, a]
 
 
 # R-7.11 Implement a function, with calling syntax max(L), that returns the maximum element from a PositionalList
@@ -646,3 +568,39 @@ def max_element(positional_list: PositionalList):
     return max_value
 
 
+# R-7.19 Suppose that we have made kn total accesses to the elements in a list L of n elements,
+# for some integer k ≥ 1. What are the minimum and maximum number of elements that have been accessed
+# fewer than k times?
+# Answer: minimum 0 maximum k - 1
+
+# R-7.20 Let L be a list of n items maintained according to the move-to-front heuristic.
+# Describe a series of O(n) accesses that will reverse L.
+# [k ... n ] L if k >= 1
+# move k + 1
+# move k + 2
+# move k + 3
+# move k + 4
+# move k + ...
+# move k + n
+
+# R-7.21 Suppose we have an n-element list L maintained according to the move-to-front heuristic.
+# Describe a sequence of n2 accesses that is guaranteed to take Ω(n3) time to perform on L.
+# [k ... n]
+# move element (k + n) n times
+
+
+class MyFavoritesList(FavoritesList):
+    # R-7.22 Implement a clear() method for the FavoritesList class that returns the list to empty.
+    def clear(self):
+        current = self._data._header
+        while current._next is not None:
+            previous = current
+            previous._prev = None
+            current._prev = None
+            current = current._next
+
+    # R-7.23 Implement a reset_counts() method for the FavoritesList class that resets all elements’
+    # (while leaving the order of the list unchanged).
+    def reset_counts(self):
+        for item in self._data:
+            item._count = 0
