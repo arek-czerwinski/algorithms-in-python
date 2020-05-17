@@ -1,9 +1,10 @@
+from abc import abstractmethod, ABC
 from typing import List, Any
 
 import pytest
 
 from chapter_7.exercises import MySingleNode, MySingleLinkedList, get_number_of_nodes, MyDoubleLinkedList, \
-    MyDoubledLinkedNode, MyCircularList
+    MyDoubledLinkedNode, MyCircularList, StackUsingSinglyList, AbstractStack
 
 from utils.errors import EmptyCollection, ValueNotFoundError
 
@@ -26,8 +27,55 @@ class TestMySingleNode:
         actual_result = node.to_dict()
         assert actual_result == expected_value
 
+# (
+#                     MySingleLinkedList(
+#                         head=MySingleNode(MySingleNode(None, 2), 1),
+#                         tail=MySingleNode(None, 2),
+#                         size=2
+#                     ),
+#                     [1, 2]
+#             ),
+
 
 class TestMySingleLinkedList:
+    # TODO: don't do this at home!!!!
+    @pytest.mark.parametrize(
+        'values_to_add, expected_state',
+        [
+            (list(), {'_head': None, '_tail': None, '_size': 0}),
+            (
+                    [1],
+                    {
+                        '_head': MySingleNode(None, 1).to_dict(),
+                        '_tail': MySingleNode(None, 1).to_dict(),
+                        '_size': 1
+                    }
+            ),
+            (
+                    [1, 2],
+                    {
+                        '_head': MySingleNode(MySingleNode(None, 1), 2).to_dict(),
+                        '_tail': MySingleNode(None, 1).to_dict(),
+                        '_size': 2
+                    }
+            ),
+            (
+                    [1, 2, 3],
+                    {
+                        '_head': MySingleNode(MySingleNode(MySingleNode(None, 1), 2), 3).to_dict(),
+                        '_tail': MySingleNode(None, 1).to_dict(),
+                        '_size': 3
+
+                    }
+            ),
+        ]
+    )
+    def test_from_collection(self, values_to_add, expected_state):
+        class_instance = MySingleLinkedList.from_collection(collection=values_to_add)
+        internal_state = class_instance.to_dict()
+        assert internal_state == expected_state
+
+
     @pytest.mark.parametrize(
         'my_list, size, expected_result',
         [
@@ -40,6 +88,7 @@ class TestMySingleLinkedList:
         actual_result = my_list.is_empty()
         assert actual_result == expected_result
 
+    # TODO: don't do this at home!!!!
     @pytest.mark.parametrize(
         'values_to_add, expected_state',
         [
@@ -653,3 +702,26 @@ class TestCircularList:
 
         actual_result = circular_list.get_items()
         assert actual_result == expected_result
+
+
+# nice example of reusing tests
+class StackFixture(ABC):
+    @abstractmethod
+    def create_instance(self, data: List[int]) -> AbstractStack:
+        raise NotImplemented()
+
+    @pytest.mark.parametrize("data, expected_result", [
+        ([], True),
+        ([1], False),
+        ([1, 2], False),
+        ([1, 2, 3], False),
+    ])
+    def test_is_empty(self, data, expected_result):
+        test_instance = self.create_instance(data=data)
+        actual_result = test_instance.is_empty()
+        assert actual_result == expected_result
+
+
+class TestStackUsingSinglyList(StackFixture):
+    def create_instance(self, data: List[int]) -> AbstractStack:
+        return StackUsingSinglyList(data)

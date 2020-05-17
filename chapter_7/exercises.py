@@ -1,4 +1,5 @@
-from typing import Optional, Any, Union, Dict, Callable, Iterable
+from abc import ABC, abstractmethod
+from typing import Optional, Any, Union, Dict, Callable, Iterable, List
 
 from chapter_7.double_linked_base import _DoublyLinkedBase
 from chapter_7.favorites_list import FavoritesList
@@ -34,6 +35,17 @@ class MySingleNode(ToDictMixin):
 
 
 class MySingleLinkedList(ToDictMixin):
+
+    @classmethod
+    def from_collection(cls, collection: Iterable[Any]) -> 'MySingleLinkedList':
+        singe_linked_list = MySingleLinkedList()
+        for element in collection:
+            singe_linked_list.add_element(value=element)
+
+        return singe_linked_list
+
+    # TODO: this constructor is terrible. Should be passed a collection which
+    #  should be converted into internal structure of this class
     def __init__(
             self,
             head: Optional[MySingleNode] = None,
@@ -43,7 +55,18 @@ class MySingleLinkedList(ToDictMixin):
         self._head: Optional[MySingleNode] = head or None
         self._tail: Optional[MySingleNode] = tail or None
         self._size = size
-        # should be added validation of input values, for example incorrect size to number of nodes
+        # TODO: should be added validation of input values, for example incorrect size to number of nodes
+
+    def add_element(self, value: Any):
+        if self.is_empty():
+            self.add_element_at_tail(value=value)
+        else:
+            node = MySingleNode(next_node=None, value=value)
+            node.next_node = self._head
+            node.value = value
+
+            self._head = node
+            self._size += 1
 
     def __len__(self):
         return self._size
@@ -604,3 +627,64 @@ class MyFavoritesList(FavoritesList):
     def reset_counts(self):
         for item in self._data:
             item._count = 0
+
+
+class AbstractStack(ABC):
+    @abstractmethod
+    def __len__(self):
+        """Return the number of elements in the stack."""
+        pass
+
+    @abstractmethod
+    def is_empty(self):
+        """Return True if the stack is empty."""
+        pass
+
+    @abstractmethod
+    def push(self, e):
+        """Add element e to the top of the stack."""
+        pass
+
+    @abstractmethod
+    def top(self):
+        """Return (but do not remove) the element at the top of the stack.
+
+        Raise Empty exception if the stack is empty.
+        """
+        pass
+
+    @abstractmethod
+    def pop(self):
+        """Remove and return the element from the top of the stack (i.e., LIFO).
+
+        Raise Empty exception if the stack is empty.
+        """
+        pass
+
+    @abstractmethod
+    def __iter__(self):
+        pass
+
+
+class StackUsingSinglyList(AbstractStack):
+    def __init__(self, elements: Optional[List[Any]] = None):
+        elements if elements else list()
+        self._single_list = MySingleLinkedList.from_collection(collection=elements)
+
+    def __len__(self):
+        return len(self._single_list)
+
+    def __iter__(self):
+        return self._single_list
+
+    def is_empty(self):
+        return self._single_list.is_empty()
+
+    def push(self, e):
+        return self._single_list.add_element(e)
+
+    def top(self):
+        return self._single_list.first
+
+    def pop(self):
+        return self._single_list.get_first_and_remove()
